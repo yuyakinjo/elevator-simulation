@@ -12,17 +12,17 @@ export default function FloorSelector() {
   const [currentElevatorFloor, setCurrentElevatorFloor] = useState<number>(1);
   // 次に向かうフロアのリストを追跡
   const [nextFloors, setNextFloors] = useState<number[]>([]);
-  
+
   // エレベーターシステムの状態が更新されたら、現在のフロアとキューを取得
   useEffect(() => {
     const systemInfo = elevatorSystem.getSystemInfo();
     if (systemInfo.elevators && systemInfo.elevators.length > 0) {
       setCurrentElevatorFloor(systemInfo.elevators[0].currentFloor);
-      
+
       // リクエストキューを取得して次に向かうフロアを設定
-      const queue = elevatorSystem.getQueueInfo ? 
-                    elevatorSystem.getQueueInfo() : 
-                    systemInfo.pendingRequests.map(req => req.toFloor);
+      const queue = elevatorSystem.getQueueInfo
+        ? elevatorSystem.getQueueInfo()
+        : systemInfo.pendingRequests.map((req) => req.toFloor);
       setNextFloors(queue);
     }
   }, [elevatorSystem, elevatorSystem.updateCount]);
@@ -61,8 +61,8 @@ export default function FloorSelector() {
                 selectedFloor === floor
                   ? "bg-blue-600 text-white font-bold shadow-md"
                   : nextFloors.includes(floor)
-                  ? "bg-yellow-500 text-white font-bold shadow-md"
-                  : "bg-gray-100 text-gray-800 font-medium hover:bg-gray-200 border border-gray-300"
+                    ? "bg-yellow-500 text-white font-bold shadow-md"
+                    : "bg-gray-100 text-gray-800 font-medium hover:bg-gray-200 border border-gray-300"
               } text-xl transition-all duration-200`}
               onClick={() => handleFloorSelect(floor)}
             >
@@ -78,7 +78,7 @@ export default function FloorSelector() {
             {currentElevatorFloor}
           </span>
         </p>
-        
+
         {nextFloors.length > 0 && (
           <p className="text-lg font-semibold text-gray-800 mt-2">
             次向かうフロア:{" "}
@@ -87,7 +87,7 @@ export default function FloorSelector() {
             </span>
           </p>
         )}
-        
+
         <p className="text-lg font-semibold text-gray-800 mt-2">
           選択されたフロア:{" "}
           <span className="text-2xl font-bold text-blue-600 ml-2">

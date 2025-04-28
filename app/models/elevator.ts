@@ -111,8 +111,8 @@ export class Elevator {
     }
   }
 
-  // 移動履歴にエントリーを追加するヘルパーメソッド
-  private addHistoryEntry(
+  // 移動履歴にエントリーを追加するメソッド (private から public に変更)
+  addHistoryEntry(
     fromFloor: number,
     toFloor: number,
     action: MoveHistoryEntry["action"],
@@ -386,6 +386,18 @@ export class ElevatorSystem {
         elevator.status = ElevatorStatus.MOVING;
         elevator.updateDirection();
       }
+    }
+  }
+
+  // 外部から直接履歴を更新するメソッド
+  updateDirectHistory(
+    elevatorId: number,
+    fromFloor: number,
+    toFloor: number,
+    action: "MOVE" | "STOP" | "DOOR_OPEN" | "DOOR_CLOSE",
+  ): void {
+    if (this.elevators[elevatorId]) {
+      this.elevators[elevatorId].addHistoryEntry(fromFloor, toFloor, action);
     }
   }
 }

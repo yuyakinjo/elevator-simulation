@@ -411,10 +411,24 @@ export default function ThreeViewer() {
         elevatorStatus === "MOVING"
       ) {
         const direction = targetFloor > elevatorGroup.position.y ? 0.05 : -0.05; // 速度を調整
+        
+        // 移動前の階数を記録
+        const previousFloor = Math.round((elevatorGroup.position.y - FLOOR_HEIGHT / 2) / FLOOR_HEIGHT) + 1;
+        
+        // 位置の更新
         elevatorGroup.position.y =
           Math.abs(targetFloor - elevatorGroup.position.y) < 0.05
             ? targetFloor
             : elevatorGroup.position.y + direction;
+            
+        // 移動後の階数を計算
+        const currentFloor = Math.round((elevatorGroup.position.y - FLOOR_HEIGHT / 2) / FLOOR_HEIGHT) + 1;
+        
+        // 階数が変わった場合、履歴を更新
+        if (previousFloor !== currentFloor) {
+          // グローバル関数を使って履歴を更新
+          (window as any).updateElevatorSystemHistory?.(previousFloor, currentFloor, "MOVE");
+        }
 
         // エレベーター移動中はビルを透明に
         setBuildingTransparency(0.25);
@@ -429,6 +443,9 @@ export default function ThreeViewer() {
           ) + 1;
         currentFloorNumber = arrivedFloor;
         console.log(`${arrivedFloor}階に到着しました`);
+        
+        // 移動終了の履歴を更新
+        (window as any).updateElevatorSystemHistory?.(arrivedFloor, arrivedFloor, "STOPPED");
 
         // 目的階に到着したらドアを開ける
         setElevatorAction("OPENING_DOORS");
@@ -446,6 +463,9 @@ export default function ThreeViewer() {
             // ドアが完全に開いたらステータス更新
             if (elevatorStatus === "OPENING_DOORS") {
               console.log("ドアが開ききりました");
+              
+              // ドアが開いた履歴を更新
+              (window as any).updateElevatorSystemHistory?.(currentFloorNumber, currentFloorNumber, "OPENING_DOORS");
 
               // ドアを開いた状態に設定
               setTimeout(() => {
@@ -473,6 +493,9 @@ export default function ThreeViewer() {
             // ドアが完全に閉まった場合の処理
             if (elevatorStatus === "CLOSING_DOORS") {
               console.log("ドアが閉まりました");
+              
+              // ドアが閉まった履歴を更新
+              (window as any).updateElevatorSystemHistory?.(currentFloorNumber, currentFloorNumber, "CLOSING_DOORS");
 
               // 次のステータスを設定
               setTimeout(() => {
@@ -541,6 +564,11 @@ export default function ThreeViewer() {
         moveElevator: (floor: number) => void;
         setElevatorAction: (action: string) => void;
         getElevatorQueue: () => number[];
+        updateElevatorSystemHistory: (
+          fromFloor: number,
+          toFloor: number,
+          action: string,
+        ) => void;
       }
     ).moveElevator = moveElevator;
 
@@ -551,7 +579,7 @@ export default function ThreeViewer() {
         getElevatorQueue: () => number[];
       }
     ).setElevatorAction = setElevatorAction;
-    
+
     // キュー情報を取得するグローバル関数をエクスポート
     (
       window as typeof window & {
@@ -561,6 +589,35 @@ export default function ThreeViewer() {
       }
     ).getElevatorQueue = () => {
       return [...floorQueue]; // 配列のコピーを返す
+    };
+
+    // エレベーターシステムを更新するためのグローバル関数をエクスポート
+    (
+      window as typeof window & {
+        moveElevator: (floor: number) => void;
+        setElevatorAction: (action: string) => void;
+        getElevatorQueue: () => number[];
+        updateElevatorSystemHistory: (
+          fromFloor: number,
+          toFloor: number,
+          action: string,
+        ) => void;
+      }
+    ).updateElevatorSystemHistory = (
+      fromFloor: number,
+      toFloor: number,
+      action: string,
+    ) => {
+      // コンソールに記録（デバッグ用）
+      console.log(
+        `エレベーターシステム履歴更新: ${fromFloor}階から${toFloor}階へ ${action}`,
+      );
+
+      // エレベーターシステムのグローバルインスタンスがあれば履歴を更新
+      const globalSystem = (window as any).__ELEVATOR_SYSTEM__;
+      if (globalSystem && typeof globalSystem.updateHistory === "function") {
+        globalSystem.updateHistory(0, fromFloor, toFloor, action);
+      }
     };
 
     // リサイズ対応
