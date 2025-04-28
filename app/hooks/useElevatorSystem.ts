@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useRef, useState } from "react";
 import { ELEVATOR_CONFIG, ElevatorSystem } from "../models/elevator";
 
@@ -71,6 +73,11 @@ export function useElevatorSystem() {
     };
   }, [running, system]);
 
+  // 履歴情報を取得
+  const getMoveHistory = () => {
+    return system.getAllElevatorsHistory();
+  };
+
   return {
     addRequest,
     startSimulation,
@@ -78,6 +85,7 @@ export function useElevatorSystem() {
     resetSystem,
     getSystemInfo,
     manualUpdate,
+    getMoveHistory, // 移動履歴取得関数を追加
     updateCount,
     running,
   };

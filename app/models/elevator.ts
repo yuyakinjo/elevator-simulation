@@ -33,6 +33,14 @@ export interface ElevatorRequest {
   timestamp: number;
 }
 
+// 移動履歴のエントリーを定義するインターフェース
+export interface MoveHistoryEntry {
+  timestamp: number;
+  fromFloor: number;
+  toFloor: number;
+  action: "MOVE" | "STOP" | "DOOR_OPEN" | "DOOR_CLOSE";
+}
+
 // エレベーターを表すクラス
 export class Elevator {
   id: number;
@@ -41,6 +49,7 @@ export class Elevator {
   direction: Direction;
   status: ElevatorStatus;
   doorTimer: number | null;
+  moveHistory: MoveHistoryEntry[]; // 移動履歴の配列
 
   constructor(id: number, initialFloor = 1) {
     this.id = id;
@@ -49,6 +58,7 @@ export class Elevator {
     this.direction = Direction.IDLE;
     this.status = ElevatorStatus.STOPPED;
     this.doorTimer = null;
+    this.moveHistory = []; // 初期化時に空の配列を設定
   }
 
   // エレベーターに目的階を追加する
@@ -98,6 +108,20 @@ export class Elevator {
     }
   }
 
+  // 移動履歴にエントリーを追加するヘルパーメソッド
+  private addHistoryEntry(
+    fromFloor: number,
+    toFloor: number,
+    action: MoveHistoryEntry["action"],
+  ): void {
+    this.moveHistory.push({
+      timestamp: Date.now(),
+      fromFloor,
+      toFloor,
+      action,
+    });
+  }
+
   // エレベーターを次の階に移動させる
   moveToNextFloor(): void {
     if (
@@ -107,12 +131,17 @@ export class Elevator {
       return;
     }
 
+    const previousFloor = this.currentFloor;
+
     // 現在の方向に基づいて移動
     if (this.direction === Direction.UP) {
       this.currentFloor++;
     } else if (this.direction === Direction.DOWN) {
       this.currentFloor--;
     }
+
+    // 移動履歴を追加
+    this.addHistoryEntry(previousFloor, this.currentFloor, "MOVE");
 
     // 目的階に到着したかどうかを確認
     this.checkArrival();
@@ -133,6 +162,10 @@ export class Elevator {
   // ドアを開ける
   openDoors(): void {
     this.status = ElevatorStatus.OPENING_DOORS;
+
+    // ドアを開く操作を履歴に追加
+    this.addHistoryEntry(this.currentFloor, this.currentFloor, "DOOR_OPEN");
+
     this.doorTimer = window.setTimeout(() => {
       this.status = ElevatorStatus.DOORS_OPEN;
       // 一定時間後にドアを閉める
@@ -145,11 +178,21 @@ export class Elevator {
   // ドアを閉める
   closeDoors(): void {
     this.status = ElevatorStatus.CLOSING_DOORS;
+
+    // ドアを閉じる操作を履歴に追加
+    this.addHistoryEntry(this.currentFloor, this.currentFloor, "DOOR_CLOSE");
+
     this.doorTimer = window.setTimeout(() => {
       this.status =
         this.targetFloors.length > 0
           ? ElevatorStatus.MOVING
           : ElevatorStatus.STOPPED;
+
+      // エレベーターが停止する場合は履歴に記録
+      if (this.status === ElevatorStatus.STOPPED) {
+        this.addHistoryEntry(this.currentFloor, this.currentFloor, "STOP");
+      }
+
       this.updateDirection();
       this.doorTimer = null;
     }, ELEVATOR_CONFIG.DOOR_OPERATION_TIME);
@@ -161,10 +204,16 @@ export class Elevator {
     this.targetFloors = [];
     this.direction = Direction.IDLE;
     this.status = ElevatorStatus.STOPPED;
+    this.moveHistory = []; // 履歴もクリア
     if (this.doorTimer) {
       clearTimeout(this.doorTimer);
       this.doorTimer = null;
     }
+  }
+
+  // 移動履歴を取得するメソッド
+  getMoveHistory(): MoveHistoryEntry[] {
+    return this.moveHistory;
   }
 }
 
@@ -288,7 +337,26 @@ export class ElevatorSystem {
     }
   }
 
-  // エレベーターを再起動する
+  // すべてのエレベーターの履歴を取得
+  getAllElevatorsHistory(): {
+    elevatorId: number;
+    history: MoveHistoryEntry[];
+  }[] {
+    return this.elevators.map((elevator) => ({
+      elevatorId: elevator.id,
+      history: elevator.getMoveHistory(),
+    }));
+  }
+
+  // システムをリセットする
+  reset(): void {
+    for (const elevator of this.elevators) {
+      elevator.reset(1); // 各エレベーターをリセット（1階に戻す）
+    }
+    this.pendingRequests = []; // 保留中のリクエストをクリア
+  }
+
+  // エレベーターを起動する
   startElevators(): void {
     for (const elevator of this.elevators) {
       if (

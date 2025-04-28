@@ -7,7 +7,9 @@ export default function ElevatorControls() {
 
   return (
     <div className="mb-6 p-4 bg-white rounded-lg shadow-sm border border-gray-200">
-      <h2 className="text-2xl font-bold mb-4 text-gray-800 border-b pb-2">エレベーター制御</h2>
+      <h2 className="text-2xl font-bold mb-4 text-gray-800 border-b pb-2">
+        エレベーター制御
+      </h2>
       <div className="flex flex-col gap-4">
         <div>
           <label className="flex items-center cursor-pointer">
@@ -26,7 +28,12 @@ export default function ElevatorControls() {
               />
             </div>
             <div className="ml-3 text-gray-800 font-semibold text-lg">
-              電源 <span className={`${elevatorPower ? "text-green-500" : "text-gray-500"} font-bold`}>{elevatorPower ? "ON" : "OFF"}</span>
+              電源{" "}
+              <span
+                className={`${elevatorPower ? "text-green-500" : "text-gray-500"} font-bold`}
+              >
+                {elevatorPower ? "ON" : "OFF"}
+              </span>
             </div>
           </label>
         </div>
