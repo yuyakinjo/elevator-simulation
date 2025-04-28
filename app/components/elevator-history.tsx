@@ -41,11 +41,11 @@ export default function ElevatorHistory() {
   // 更新カウンタを監視して履歴を更新
   const updateCount = elevatorSystem.updateCount;
 
-  // 履歴を更新 - updateCountが変わるたびに再取得
+  // 履歴を更新 - 変更があるたびに再取得
   useEffect(() => {
     const allHistory = elevatorSystem.getMoveHistory();
     setHistory(allHistory);
-  }, [elevatorSystem, updateCount]);
+  }, [elevatorSystem]);
 
   // 初期選択状態を一度だけ設定
   useEffect(() => {
