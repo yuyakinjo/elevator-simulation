@@ -51,6 +51,21 @@ export function useElevatorSystem() {
     };
   };
 
+  // キュー情報を取得する関数
+  const getQueueInfo = () => {
+    // Three.jsとの連携用にグローバルで定義されているキュー情報を取得
+    const windowWithQueue = window as typeof window & { 
+      getElevatorQueue?: () => number[] 
+    };
+    
+    if (typeof windowWithQueue.getElevatorQueue === 'function') {
+      return windowWithQueue.getElevatorQueue();
+    }
+    
+    // フォールバック: システムからペンディングリクエストを取得
+    return system.pendingRequests.map(req => req.toFloor);
+  };
+
   // マニュアル更新（主にアニメーション用）
   const manualUpdate = () => {
     system.update();
@@ -88,6 +103,7 @@ export function useElevatorSystem() {
     stopSimulation,
     resetSystem,
     getSystemInfo,
+    getQueueInfo,
     manualUpdate,
     getMoveHistory, // 移動履歴取得関数を追加
     updateCount,

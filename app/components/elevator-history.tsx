@@ -37,7 +37,7 @@ export default function ElevatorHistory() {
   const [selectedElevatorId, setSelectedElevatorId] = useState<number | null>(
     null,
   );
-  
+
   // 更新カウンタを監視して履歴を更新
   const updateCount = elevatorSystem.updateCount;
 
