@@ -162,9 +162,9 @@ export class ElevatorController {
         break;
 
       case ElevatorStatus.STOPPED:
-        // 停止状態にはエレベーターを赤色に
+        // 停止状態にはエレベーターをライトグレー色に（赤から変更）
         if (this.model.cabin.material instanceof THREE.MeshStandardMaterial) {
-          this.model.cabin.material.color.set(0xff0000);
+          this.model.cabin.material.color.set(0xd3d3d3);
         }
 
         // 停止したらキューをチェックして次の目的地があれば移動
