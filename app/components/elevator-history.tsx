@@ -81,20 +81,20 @@ export default function ElevatorHistory() {
       </div>
 
       {/* 履歴リスト */}
-      <div className="overflow-y-auto max-h-64">
+      <div className="overflow-y-auto max-h-64 w-full">
         {filteredHistory.length === 0 ? (
           <p className="text-gray-500 italic">履歴はありません</p>
         ) : (
-          <table className="min-w-full border-collapse">
+          <table className="w-full table-fixed border-collapse">
             <thead>
               <tr className="bg-gray-100 border-b-2 border-gray-300">
-                <th className="py-3 px-6 text-left font-bold text-base text-gray-800">
+                <th className="py-3 px-4 text-left font-bold text-base text-gray-800 w-1/4">
                   時刻
                 </th>
-                <th className="py-3 px-6 text-left font-bold text-base text-gray-800">
+                <th className="py-3 px-4 text-left font-bold text-base text-gray-800 w-1/3">
                   アクション
                 </th>
-                <th className="py-3 px-6 text-left font-bold text-base text-gray-800">
+                <th className="py-3 px-4 text-left font-bold text-base text-gray-800 w-1/3">
                   フロア
                 </th>
               </tr>
@@ -110,10 +110,10 @@ export default function ElevatorHistory() {
                       index % 2 === 0 ? "bg-gray-50" : "bg-white"
                     } hover:bg-blue-50 transition-colors border-b border-gray-200`}
                   >
-                    <td className="py-3 px-6 font-medium text-gray-900">
+                    <td className="py-2 px-4 font-medium text-gray-900 whitespace-nowrap">
                       {formatTimestamp(entry.timestamp)}
                     </td>
-                    <td className="py-3 px-6">
+                    <td className="py-2 px-4">
                       <span
                         className={`inline-flex items-center justify-center px-3 py-1.5 rounded-full text-sm font-medium ${
                           entry.action === "MOVE"
@@ -128,7 +128,7 @@ export default function ElevatorHistory() {
                         {translateAction(entry.action)}
                       </span>
                     </td>
-                    <td className="py-3 px-6 font-medium text-gray-900 text-lg">
+                    <td className="py-2 px-4 font-medium text-gray-900">
                       {entry.action === "MOVE" ? (
                         <span>
                           {entry.fromFloor}{" "}

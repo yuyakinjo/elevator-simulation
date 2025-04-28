@@ -14,6 +14,13 @@ export default function ThreeViewer() {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xf0f0f0);
 
+    // 建物の定数を先に定義
+    const FLOOR_COUNT = 30; // フロア数を高層マンション風に増加
+    const FLOOR_HEIGHT = 1.2; // フロアあたりの高さ
+    const BUILDING_HEIGHT = FLOOR_COUNT * FLOOR_HEIGHT; // 建物の総高さ
+    const BUILDING_WIDTH = 8;
+    const BUILDING_DEPTH = 8;
+
     // ライト追加
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.7); // 柔らかい全体光
     scene.add(ambientLight);
@@ -22,12 +29,16 @@ export default function ThreeViewer() {
     scene.add(directionalLight);
 
     const camera = new THREE.PerspectiveCamera(
-      75,
+      60, // 視野角を少し狭くして遠近感を調整
       mountRef.current.clientWidth / mountRef.current.clientHeight,
       0.1,
-      1000,
+      1000
     );
-    camera.position.z = 10;
+    
+    // カメラ位置をビル全体が見えるように調整
+    camera.position.set(20, BUILDING_HEIGHT / 2, 25);
+    // カメラをシーンの中心（ビルの中央）に向ける
+    camera.lookAt(0, BUILDING_HEIGHT / 2, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(
@@ -39,13 +50,6 @@ export default function ThreeViewer() {
     // コントロールの追加
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-
-    // 建物の定数を定義
-    const FLOOR_COUNT = 30; // フロア数を高層マンション風に増加
-    const FLOOR_HEIGHT = 1.2; // フロアあたりの高さ
-    const BUILDING_HEIGHT = FLOOR_COUNT * FLOOR_HEIGHT; // 建物の総高さ
-    const BUILDING_WIDTH = 8;
-    const BUILDING_DEPTH = 8;
 
     // 建物パーツのグループ化（透明度を一括制御するため）
     const buildingParts = new THREE.Group();

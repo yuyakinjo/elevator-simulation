@@ -9,7 +9,7 @@ export default function ElevatorSimulation() {
       <div className="flex-grow">
         <ThreeViewer />
       </div>
-      <div className="w-full md:w-80 bg-gray-100 p-4 overflow-y-auto">
+      <div className="w-full md:w-96 lg:w-112 xl:w-128 bg-gray-100 p-4 overflow-y-auto">
         <ElevatorControls />
         <div className="my-4" />
         <FloorSelector />
