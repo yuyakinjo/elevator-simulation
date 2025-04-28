@@ -1,9 +1,28 @@
 "use client";
 
 import { useState } from "react";
+import { useSharedElevatorSystem } from "../contexts/ElevatorSystemContext";
 
 export default function ElevatorControls() {
   const [elevatorPower, setElevatorPower] = useState(true);
+  const elevatorSystem = useSharedElevatorSystem();
+
+  const handlePowerToggle = () => {
+    const newPowerState = !elevatorPower;
+    setElevatorPower(newPowerState);
+
+    // エレベーターシステムの状態も変更
+    if (newPowerState) {
+      elevatorSystem.startSimulation();
+    } else {
+      elevatorSystem.stopSimulation();
+    }
+  };
+
+  const handleEmergencyStop = () => {
+    // 緊急停止ボタンの処理
+    elevatorSystem.stopSimulation();
+  };
 
   return (
     <div className="mb-6 p-4 bg-white rounded-lg shadow-sm border border-gray-200">
@@ -18,7 +37,7 @@ export default function ElevatorControls() {
                 type="checkbox"
                 className="sr-only"
                 checked={elevatorPower}
-                onChange={() => setElevatorPower(!elevatorPower)}
+                onChange={handlePowerToggle}
               />
               <div
                 className={`block w-14 h-8 rounded-full ${elevatorPower ? "bg-green-500" : "bg-gray-400"}`}
@@ -42,6 +61,7 @@ export default function ElevatorControls() {
           type="button"
           className="px-4 py-3 bg-red-500 text-white text-lg font-bold rounded-md hover:bg-red-600 disabled:bg-gray-300 transition-colors shadow-sm"
           disabled={!elevatorPower}
+          onClick={handleEmergencyStop}
         >
           緊急停止
         </button>

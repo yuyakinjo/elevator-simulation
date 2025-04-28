@@ -1,16 +1,24 @@
 "use client";
 
 import { useState } from "react";
+import { useSharedElevatorSystem } from "../contexts/ElevatorSystemContext";
 
 export default function FloorSelector() {
   const floors = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
   const [selectedFloor, setSelectedFloor] = useState<number | null>(null);
+  const elevatorSystem = useSharedElevatorSystem();
 
   const handleFloorSelect = (floor: number) => {
     setSelectedFloor(floor);
+
+    // Three.jsのビジュアル表示も更新（既存の統合を維持）
     (
       window as typeof window & { moveElevator: (floor: number) => void }
-    ).moveElevator(floor * 3 - 6); // フロアに応じたエレベーターのY座標を計算
+    ).moveElevator(floor * 3 - 6);
+
+    // エレベーターシステムにリクエストを追加
+    const currentFloor = selectedFloor || 1;
+    elevatorSystem.addRequest(currentFloor, floor);
   };
 
   return (

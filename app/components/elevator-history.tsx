@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useElevatorSystem } from "../hooks/useElevatorSystem";
+import { useSharedElevatorSystem } from "../contexts/ElevatorSystemContext";
 import type { MoveHistoryEntry } from "../models/elevator";
 
 // 日時をフォーマットする関数
@@ -30,7 +30,7 @@ const translateAction = (action: string): string => {
 };
 
 export default function ElevatorHistory() {
-  const elevatorSystem = useElevatorSystem();
+  const elevatorSystem = useSharedElevatorSystem();
   const [history, setHistory] = useState<
     Array<{ elevatorId: number; history: MoveHistoryEntry[] }>
   >([]);
@@ -85,12 +85,18 @@ export default function ElevatorHistory() {
         {filteredHistory.length === 0 ? (
           <p className="text-gray-500 italic">履歴はありません</p>
         ) : (
-          <table className="min-w-full">
+          <table className="min-w-full border-collapse">
             <thead>
-              <tr className="bg-gray-100">
-                <th className="py-2 px-4 text-left">時刻</th>
-                <th className="py-2 px-4 text-left">アクション</th>
-                <th className="py-2 px-4 text-left">フロア</th>
+              <tr className="bg-gray-100 border-b-2 border-gray-300">
+                <th className="py-3 px-6 text-left font-bold text-base text-gray-800">
+                  時刻
+                </th>
+                <th className="py-3 px-6 text-left font-bold text-base text-gray-800">
+                  アクション
+                </th>
+                <th className="py-3 px-6 text-left font-bold text-base text-gray-800">
+                  フロア
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -102,14 +108,14 @@ export default function ElevatorHistory() {
                     key={entry.timestamp}
                     className={`${
                       index % 2 === 0 ? "bg-gray-50" : "bg-white"
-                    } hover:bg-blue-50 transition-colors`}
+                    } hover:bg-blue-50 transition-colors border-b border-gray-200`}
                   >
-                    <td className="py-2 px-4 text-sm">
+                    <td className="py-3 px-6 font-medium text-gray-900">
                       {formatTimestamp(entry.timestamp)}
                     </td>
-                    <td className="py-2 px-4">
+                    <td className="py-3 px-6">
                       <span
-                        className={`inline-block px-2 py-1 rounded-full text-xs ${
+                        className={`inline-flex items-center justify-center px-3 py-1.5 rounded-full text-sm font-medium ${
                           entry.action === "MOVE"
                             ? "bg-blue-100 text-blue-800"
                             : entry.action === "STOP"
@@ -122,10 +128,16 @@ export default function ElevatorHistory() {
                         {translateAction(entry.action)}
                       </span>
                     </td>
-                    <td className="py-2 px-4">
-                      {entry.action === "MOVE"
-                        ? `${entry.fromFloor} → ${entry.toFloor}`
-                        : entry.fromFloor}
+                    <td className="py-3 px-6 font-medium text-gray-900 text-lg">
+                      {entry.action === "MOVE" ? (
+                        <span>
+                          {entry.fromFloor}{" "}
+                          <span className="text-blue-600 font-bold">→</span>{" "}
+                          {entry.toFloor}
+                        </span>
+                      ) : (
+                        entry.fromFloor
+                      )}
                     </td>
                   </tr>
                 ))}

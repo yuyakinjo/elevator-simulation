@@ -27,6 +27,10 @@ export function useElevatorSystem() {
   const addRequest = (fromFloor: number, toFloor: number) => {
     const requestId = system.addRequest(fromFloor, toFloor);
     startSimulation(); // リクエストが追加されたら自動的にシミュレーションを開始
+    
+    // 履歴が即座に更新されるように明示的に更新カウンタをインクリメント
+    setUpdateCount(prev => prev + 1);
+    
     return requestId;
   };
 
