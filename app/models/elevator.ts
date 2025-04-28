@@ -59,7 +59,7 @@ export class Elevator {
     this.status = ElevatorStatus.STOPPED;
     this.doorTimer = null;
     this.moveHistory = []; // 初期化時に空の配列を設定
-    
+
     // 初期状態を履歴に記録
     this.addHistoryEntry(initialFloor, initialFloor, "STOP");
   }
@@ -247,21 +247,23 @@ export class ElevatorSystem {
 
     if (elevator) {
       request.assignedElevatorId = elevator.id;
-      elevator.addTargetFloor(fromFloor); // 最初に乗客がいる階へ
+
+      // エレベーターが現在地と異なる階にいる場合のみターゲットに追加
+      if (elevator.currentFloor !== fromFloor) {
+        elevator.addTargetFloor(fromFloor); // 最初に乗客がいる階へ
+      }
+
       this.pendingRequests.push(request);
-      
+
       // リクエストを記録したら即座に状態を更新
-      elevator.status = ElevatorStatus.MOVING;
-      elevator.updateDirection();
-      
-      // 手動でリクエスト記録イベント追加
-      elevator.moveHistory.push({
-        timestamp: Date.now(),
-        fromFloor: elevator.currentFloor,
-        toFloor: fromFloor,
-        action: "MOVE"
-      });
-      
+      if (
+        elevator.status === ElevatorStatus.STOPPED &&
+        elevator.targetFloors.length > 0
+      ) {
+        elevator.status = ElevatorStatus.MOVING;
+        elevator.updateDirection();
+      }
+
       // シミュレーション更新
       this.update();
     } else {

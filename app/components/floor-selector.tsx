@@ -9,15 +9,18 @@ export default function FloorSelector() {
   const elevatorSystem = useSharedElevatorSystem();
 
   const handleFloorSelect = (floor: number) => {
+    // 現在のフロアを保存
+    const currentFloor = selectedFloor || 1;
+
+    // 選択されたフロアを状態に設定
     setSelectedFloor(floor);
 
-    // Three.jsのビジュアル表示も更新（既存の統合を維持）
+    // Three.jsのビジュアル表示を更新（直接フロア番号を渡す）
     (
       window as typeof window & { moveElevator: (floor: number) => void }
-    ).moveElevator(floor * 3 - 6);
+    ).moveElevator(floor);
 
-    // エレベーターシステムにリクエストを追加
-    const currentFloor = selectedFloor || 1;
+    // リクエスト前に現在のフロアを使用（selectedFloorはまだ更新されていない）
     elevatorSystem.addRequest(currentFloor, floor);
   };
 

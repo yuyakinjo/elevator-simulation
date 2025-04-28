@@ -42,7 +42,7 @@ export default function ElevatorHistory() {
   useEffect(() => {
     const allHistory = elevatorSystem.getMoveHistory();
     setHistory(allHistory);
-  }, [elevatorSystem.updateCount]);
+  }, [elevatorSystem]);
 
   // 初期選択状態を一度だけ設定
   useEffect(() => {
@@ -105,7 +105,7 @@ export default function ElevatorHistory() {
                 .reverse()
                 .map((entry, index) => (
                   <tr
-                    key={entry.timestamp}
+                    key={`${entry.timestamp}-${index}`}
                     className={`${
                       index % 2 === 0 ? "bg-gray-50" : "bg-white"
                     } hover:bg-blue-50 transition-colors border-b border-gray-200`}
