@@ -37,10 +37,16 @@ export default function FloorSelector() {
     const elevator1 = systemInfo.elevators[0];
     const actualCurrentFloor = elevator1.currentFloor;
 
-    // Three.jsのビジュアル表示を更新（直接フロア番号を渡す）
-    (
-      window as typeof window & { moveElevator: (floor: number) => void }
-    ).moveElevator(floor);
+    // Three.jsのビジュアル表示を更新（エレベーターIDとフロア番号を渡す）
+    // 0は最初のエレベーターのID（0から始まる）
+    const elevatorWindow = window as typeof window & {
+      moveElevator?: (elevatorId: number, floor: number) => void;
+    };
+    if (elevatorWindow.moveElevator) {
+      elevatorWindow.moveElevator(0, floor);
+    } else {
+      console.error("moveElevator function is not available on window object");
+    }
 
     // 実際のエレベーターの現在位置からのリクエストを作成
     elevatorSystem.addRequest(actualCurrentFloor, floor);

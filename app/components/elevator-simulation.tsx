@@ -1,7 +1,7 @@
 import ElevatorControls from "@/app/components/elevator-controls";
 import ElevatorHistory from "@/app/components/elevator-history";
 import FloorSelector from "@/app/components/floor-selector";
-import ThreeViewer from "@/app/components/three-viewer";
+import { ThreeViewer } from "@/app/components/three-viewer/three-viewer";
 
 export default function ElevatorSimulation() {
   return (

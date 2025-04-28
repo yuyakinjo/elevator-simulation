@@ -90,11 +90,12 @@ export function useElevatorSystem() {
   const getQueueInfo = () => {
     // Three.jsとの連携用にグローバルで定義されているキュー情報を取得
     const windowWithQueue = window as typeof window & {
-      getElevatorQueue?: () => number[];
+      getElevatorQueue?: (elevatorId: number) => number[];
     };
 
     if (typeof windowWithQueue.getElevatorQueue === "function") {
-      return windowWithQueue.getElevatorQueue();
+      // エレベーターID 0 (最初のエレベーター) のキューを取得
+      return windowWithQueue.getElevatorQueue(0);
     }
 
     // フォールバック: システムからペンディングリクエストを取得
