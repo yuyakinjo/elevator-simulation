@@ -3,6 +3,7 @@
 import type { ElevatorSystemWindow } from "@/app/utils/three/window-interface";
 import { useEffect, useRef } from "react";
 import { createBuildingModel } from "./building/building-model";
+import { FloorLabels } from "./building/floor-labels";
 import { ELEVATOR_COUNT, type ElevatorStatus } from "./constants";
 import { ElevatorController } from "./elevator/elevator-controller";
 import { createElevatorModel } from "./elevator/elevator-model";
@@ -27,6 +28,9 @@ export function ThreeViewer() {
 
     // 建物モデル作成
     const building = createBuildingModel(scene);
+
+    // フロアラベル作成
+    const floorLabels = new FloorLabels({ scene });
 
     // エレベーターの生成と管理（複数台に対応）
     const elevatorControllers: ElevatorController[] = [];
@@ -84,6 +88,15 @@ export function ThreeViewer() {
       }
     };
 
+    // フロアラベル表示/非表示切り替えAPI
+    elevatorWindow.toggleFloorLabels = () => {
+      return floorLabels.toggleVisibility();
+    };
+
+    elevatorWindow.setFloorLabelsVisibility = (visible: boolean) => {
+      floorLabels.setVisibility(visible);
+    };
+
     // アニメーションループ
     const animate = () => {
       requestAnimationFrame(animate);
@@ -119,6 +132,7 @@ export function ThreeViewer() {
       if (mountRef.current) {
         mountRef.current.removeChild(renderer.domElement);
       }
+      floorLabels.dispose();
     };
   }, []);
 

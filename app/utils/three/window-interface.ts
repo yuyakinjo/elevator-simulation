@@ -16,4 +16,6 @@ export interface ElevatorSystemWindow extends Window {
       action: string,
     ) => void;
   };
+  toggleFloorLabels?: () => boolean; // フロアラベルの表示/非表示を切り替える
+  setFloorLabelsVisibility?: (visible: boolean) => void; // フロアラベルの表示/非表示を設定
 }
