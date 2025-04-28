@@ -90,7 +90,7 @@ export class ElevatorInfoDisplay {
     const context = canvas.getContext("2d");
     if (context) {
       // キャンバスをクリア
-      context.fillStyle = "rgba(0, 0, 0, 0)";
+      context.fillStyle = "rgba(0, 0, 0, 0.5)"; // 背景を少し暗くして矢印を見やすく
       context.fillRect(0, 0, canvas.width, canvas.height);
 
       // 矢印を描画しない（初期状態）
@@ -120,6 +120,10 @@ export class ElevatorInfoDisplay {
   ): void {
     // キャンバスをクリア
     context.clearRect(0, 0, 128, 128);
+
+    // 背景を少し暗くして矢印を見やすく
+    context.fillStyle = "rgba(0, 0, 0, 0.5)";
+    context.fillRect(0, 0, 128, 128);
 
     // 矢印の色を設定
     context.fillStyle = "#ffffff";
@@ -156,8 +160,10 @@ export class ElevatorInfoDisplay {
       context.lineTo(centerX + 20, 78);
       context.closePath();
       context.fill();
+    } else {
+      // "none"の場合は何も描画しない、背景も透明に
+      context.clearRect(0, 0, 128, 128);
     }
-    // "none"の場合は何も描画しない
   }
 
   // 表示内容を更新

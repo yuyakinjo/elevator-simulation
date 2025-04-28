@@ -34,6 +34,10 @@ export class ElevatorController {
     // シーンが提供されている場合、エレベーター情報表示を初期化
     if (scene) {
       this.infoDisplay = new ElevatorInfoDisplay({ scene }, model.id);
+      // 初期状態を設定
+      this.infoDisplay.updateInfo(this.state.currentFloor, "none");
+      this.infoDisplay.updatePosition(this.state.currentFloor, 0.8); // 少し上に配置
+      console.log(`エレベーター${this.model.id + 1} 情報表示を初期化しました`);
     }
   }
 
@@ -270,13 +274,16 @@ export class ElevatorController {
   private updateInfoDisplay(): void {
     if (this.infoDisplay) {
       // 現在の階と方向を更新
-      this.infoDisplay.updateInfo(
-        this.state.currentFloor,
-        this.calculateDirection(),
+      const direction = this.calculateDirection();
+
+      // コンソールにデバッグ情報を出力（矢印の方向確認用）
+      console.log(
+        `エレベーター${this.model.id + 1} 現在階: ${this.state.currentFloor}, 方向: ${direction}, 状態: ${this.state.status}`,
       );
 
+      this.infoDisplay.updateInfo(this.state.currentFloor, direction);
+
       // 位置を更新（エレベーターの上に配置）
-      const currentPosition = this.model.group.position.y;
       this.infoDisplay.updatePosition(this.state.currentFloor, 0.8);
     }
   }

@@ -63,7 +63,7 @@ export default function ElevatorControls() {
           {/* フロアラベル切り替え用の専用コンポーネントを使用 */}
           <FloorLabelsToggle />
         </div>
-        
+
         <div className="border-t pt-4 mt-2">
           {/* エレベーター情報表示切り替え用の専用コンポーネントを使用 */}
           <ElevatorInfoToggle />
