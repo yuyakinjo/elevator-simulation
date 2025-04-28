@@ -37,19 +37,22 @@ export default function ElevatorHistory() {
   const [selectedElevatorId, setSelectedElevatorId] = useState<number | null>(
     null,
   );
+  
+  // 更新カウンタを監視して履歴を更新
+  const updateCount = elevatorSystem.updateCount;
 
-  // 履歴を更新
+  // 履歴を更新 - updateCountが変わるたびに再取得
   useEffect(() => {
     const allHistory = elevatorSystem.getMoveHistory();
     setHistory(allHistory);
-  }, [elevatorSystem]);
+  }, [elevatorSystem, updateCount]);
 
   // 初期選択状態を一度だけ設定
   useEffect(() => {
     if (history.length > 0 && selectedElevatorId === null) {
       setSelectedElevatorId(history[0].elevatorId);
     }
-  }, [history]);
+  }, [history, selectedElevatorId]);
 
   // 表示するエレベーターの履歴をフィルタリング
   const filteredHistory =

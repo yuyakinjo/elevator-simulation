@@ -32,9 +32,9 @@ export default function ThreeViewer() {
       60, // 視野角を少し狭くして遠近感を調整
       mountRef.current.clientWidth / mountRef.current.clientHeight,
       0.1,
-      1000
+      1000,
     );
-    
+
     // カメラ位置をビル全体が見えるように調整
     camera.position.set(20, BUILDING_HEIGHT / 2, 25);
     // カメラをシーンの中心（ビルの中央）に向ける
@@ -50,6 +50,10 @@ export default function ThreeViewer() {
     // コントロールの追加
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
+    // コントロールの中心点（ターゲット）をビルの中央に設定
+    controls.target.set(0, BUILDING_HEIGHT / 2, 0);
+    // 初期設定を適用
+    controls.update();
 
     // 建物パーツのグループ化（透明度を一括制御するため）
     const buildingParts = new THREE.Group();
@@ -114,7 +118,7 @@ export default function ThreeViewer() {
         (BUILDING_DEPTH + 0.34) / 2,
       );
       buildingParts.add(glassFront); // グループに追加
-      
+
       // 背面
       const glassBack = new THREE.Mesh(glassGeometry, glassMaterial);
       glassBack.position.set(
@@ -123,7 +127,7 @@ export default function ThreeViewer() {
         -(BUILDING_DEPTH + 0.34) / 2,
       );
       buildingParts.add(glassBack); // グループに追加
-      
+
       // 左右
       const glassSideGeometry = new THREE.BoxGeometry(
         0.08,
@@ -138,7 +142,7 @@ export default function ThreeViewer() {
         0,
       );
       buildingParts.add(glassRight); // グループに追加
-      
+
       // 左
       const glassLeft = new THREE.Mesh(glassSideGeometry, glassMaterial);
       glassLeft.position.set(
@@ -185,18 +189,62 @@ export default function ThreeViewer() {
       buildingParts.add(accent); // グループに追加
     }
 
-    // エレベーターの3Dモデル（中央に表示、外観の邪魔にならないよう小さめ）
-    const elevatorGeometry = new THREE.BoxGeometry(
+    // エレベーターの3Dモデルをグループとして作成（キャビンと扉）
+    const elevatorGroup = new THREE.Group();
+    scene.add(elevatorGroup);
+
+    // エレベーターのキャビン（本体部分）
+    const elevatorCabinGeometry = new THREE.BoxGeometry(
       1.2,
       FLOOR_HEIGHT * 0.9,
       1.2,
     );
-    const elevatorMaterial = new THREE.MeshStandardMaterial({
-      color: 0x00ff00,
+    const elevatorCabinMaterial = new THREE.MeshStandardMaterial({
+      color: 0x00ff00, // 初期は緑色
+      roughness: 0.3,
+      metalness: 0.5,
     });
-    const elevator = new THREE.Mesh(elevatorGeometry, elevatorMaterial);
-    elevator.position.y = FLOOR_HEIGHT / 2;
-    scene.add(elevator);
+    const elevatorCabin = new THREE.Mesh(
+      elevatorCabinGeometry,
+      elevatorCabinMaterial,
+    );
+    elevatorGroup.add(elevatorCabin);
+
+    // エレベーターの左扉
+    const leftDoorGeometry = new THREE.BoxGeometry(
+      0.6,
+      FLOOR_HEIGHT * 0.8,
+      0.1,
+    );
+    const doorMaterial = new THREE.MeshStandardMaterial({
+      color: 0x444444,
+      roughness: 0.2,
+      metalness: 0.8,
+    });
+    const leftDoor = new THREE.Mesh(leftDoorGeometry, doorMaterial);
+    leftDoor.position.set(-0.3, 0, 0.65); // 初期位置は閉じている
+    elevatorGroup.add(leftDoor);
+
+    // エレベーターの右扉
+    const rightDoorGeometry = new THREE.BoxGeometry(
+      0.6,
+      FLOOR_HEIGHT * 0.8,
+      0.1,
+    );
+    const rightDoor = new THREE.Mesh(rightDoorGeometry, doorMaterial);
+    rightDoor.position.set(0.3, 0, 0.65); // 初期位置は閉じている
+    elevatorGroup.add(rightDoor);
+
+    // エレベーターグループの初期位置
+    elevatorGroup.position.y = FLOOR_HEIGHT / 2;
+
+    // エレベーターの状態
+    let elevatorStatus = "STOPPED";
+    const doorAnimation = {
+      isAnimating: false,
+      openAmount: 0, // 0: 閉じている、1: 開いている
+      targetOpenAmount: 0,
+    };
 
     // 各フロアの高さを計算する関数
     const calculateFloorHeight = (floor: number): number => {
@@ -207,51 +255,157 @@ export default function ThreeViewer() {
     // エレベーターの動作ロジック
     let targetFloor = calculateFloorHeight(1); // 初期フロアは1階
     const moveElevator = (floor: number) => {
-      // フロア番号（1～10）から実際の高さを計算
+      // フロア番号から実際の高さを計算
       targetFloor = calculateFloorHeight(floor);
+      // 移動中の状態に設定
+      elevatorStatus = "MOVING";
+      // エレベーターカラーを更新（移動中は緑）
+      elevatorCabinMaterial.color.set(0x00ff00);
+    };
+
+    // エレベーターのアクションを設定する関数
+    const setElevatorAction = (action: string) => {
+      elevatorStatus = action;
+
+      switch (action) {
+        case "OPENING_DOORS":
+          doorAnimation.isAnimating = true;
+          doorAnimation.targetOpenAmount = 1;
+          break;
+        case "CLOSING_DOORS":
+          doorAnimation.isAnimating = true;
+          doorAnimation.targetOpenAmount = 0;
+          break;
+        case "DOORS_OPEN":
+          doorAnimation.openAmount = 1;
+          doorAnimation.isAnimating = false;
+          break;
+        case "STOPPED":
+          // 停止状態にはエレベーターを赤色に
+          elevatorCabinMaterial.color.set(0xff0000);
+          break;
+        case "MOVING":
+          // 移動中は緑色
+          elevatorCabinMaterial.color.set(0x00ff00);
+          break;
+      }
+    };
+
+    // ビルの透明度を設定する関数
+    const setBuildingTransparency = (opacity: number) => {
+      buildingParts.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          // マテリアル名に基づいて透明度を調整
+          if (child.material.name === "glass") {
+            // ガラス部分は元々透明なので元の透明度を維持しつつ調整
+            child.material.opacity = Math.min(0.35, opacity + 0.1);
+          } else if (child.material.name === "window") {
+            // 窓も元々半透明なので調整
+            child.material.opacity = Math.min(0.7, opacity + 0.2);
+          } else {
+            // その他の部分は指定された透明度を適用
+            child.material.opacity = opacity;
+          }
+
+          // 透明度が1未満のときは透明設定を有効に
+          child.material.transparent = opacity < 0.99;
+        }
+      });
     };
 
     // アニメーションループ内でエレベーターを動かす
     const animate = () => {
       requestAnimationFrame(animate);
 
-      // エレベーターの位置を更新 - 移動速度を遅くして透明状態の持続時間を長く
-      if (elevator.position.y !== targetFloor) {
-        const direction = targetFloor > elevator.position.y ? 0.05 : -0.05; // 速度を半分に
-        elevator.position.y =
-          Math.abs(targetFloor - elevator.position.y) < 0.05
+      // エレベーターの位置を更新
+      if (
+        elevatorGroup.position.y !== targetFloor &&
+        elevatorStatus === "MOVING"
+      ) {
+        const direction = targetFloor > elevatorGroup.position.y ? 0.05 : -0.05; // 速度を調整
+        elevatorGroup.position.y =
+          Math.abs(targetFloor - elevatorGroup.position.y) < 0.05
             ? targetFloor
-            : elevator.position.y + direction;
+            : elevatorGroup.position.y + direction;
 
-        // ビルをより透明にする（0.5→0.25に変更）
-        buildingParts.traverse((child) => {
-          if (child instanceof THREE.Mesh) {
-            // ガラス部分は元々透明なので、それほど透明にしない
-            if (child.material.opacity < 0.5) {
-              child.material.opacity = Math.min(child.material.opacity, 0.2);
-            } else {
-              child.material.opacity = 0.25; // より透明に
-            }
+        // エレベーター移動中はビルを透明に
+        setBuildingTransparency(0.25);
+      } else if (
+        elevatorGroup.position.y === targetFloor &&
+        elevatorStatus === "MOVING"
+      ) {
+        // 目的階に到着したらドアを開ける
+        setElevatorAction("OPENING_DOORS");
+
+        // 一定時間後にドアを開いた状態にし、さらに一定時間後に閉める
+        setTimeout(() => {
+          setElevatorAction("DOORS_OPEN");
+
+          setTimeout(() => {
+            setElevatorAction("CLOSING_DOORS");
+
+            setTimeout(() => {
+              setElevatorAction("STOPPED");
+            }, 2000); // ドアを閉めるのにかかる時間
+          }, 3000); // ドアを開いている時間
+        }, 2000); // ドアを開けるのにかかる時間
+      }
+
+      // ドアのアニメーション
+      if (doorAnimation.isAnimating) {
+        if (doorAnimation.targetOpenAmount > doorAnimation.openAmount) {
+          // ドアを開く
+          doorAnimation.openAmount += 0.02;
+          if (doorAnimation.openAmount >= doorAnimation.targetOpenAmount) {
+            doorAnimation.openAmount = doorAnimation.targetOpenAmount;
+            doorAnimation.isAnimating = false;
           }
-        });
-      } else {
-        // エレベーターが目的階に到着したら元の透明度に戻す
-        buildingParts.traverse((child) => {
-          if (child instanceof THREE.Mesh) {
-            // ガラス部分
-            if (child.material.name === "glass") {
-              child.material.opacity = 0.35;
-            } 
-            // 窓
-            else if (child.material.name === "window") {
-              child.material.opacity = 0.7;
-            } 
-            // その他の部分
-            else {
-              child.material.opacity = 1.0;
-            }
+        } else if (doorAnimation.targetOpenAmount < doorAnimation.openAmount) {
+          // ドアを閉じる
+          doorAnimation.openAmount -= 0.02;
+          if (doorAnimation.openAmount <= doorAnimation.targetOpenAmount) {
+            doorAnimation.openAmount = doorAnimation.targetOpenAmount;
+            doorAnimation.isAnimating = false;
           }
-        });
+        }
+
+        // ドアの位置を更新
+        leftDoor.position.x = -0.3 - doorAnimation.openAmount * 0.5;
+        rightDoor.position.x = 0.3 + doorAnimation.openAmount * 0.5;
+      }
+
+      // カメラとビルの距離に応じた透明度の設定
+      // ビルの中心点（ビルの位置）
+      const buildingCenter = new THREE.Vector3(0, BUILDING_HEIGHT / 2, 0);
+      // カメラとビルの距離を計算
+      const distanceToBuilding = camera.position.distanceTo(buildingCenter);
+
+      // 距離に応じた透明度の閾値
+      const MIN_DISTANCE = 15; // この距離以下では完全不透明
+      const MAX_DISTANCE = 30; // この距離以上では最も透明
+
+      // エレベーターが移動中でない場合にのみ、距離に応じた透明度を適用
+      if (elevatorStatus !== "MOVING") {
+        if (distanceToBuilding > MIN_DISTANCE) {
+          // 距離に応じた透明度の計算（MIN_DISTANCEからMAX_DISTANCEの間で線形に変化）
+          const transparency = Math.min(
+            0.3 +
+              ((distanceToBuilding - MIN_DISTANCE) /
+                (MAX_DISTANCE - MIN_DISTANCE)) *
+                0.6,
+            0.9,
+          );
+
+          // 視点が遠い場合はビルを半透明に
+          if (distanceToBuilding > MAX_DISTANCE) {
+            setBuildingTransparency(0.2); // 最大の透明度
+          } else {
+            setBuildingTransparency(1 - transparency); // 距離に応じた透明度
+          }
+        } else {
+          // 近い場合は完全不透明
+          setBuildingTransparency(1.0);
+        }
       }
 
       controls.update();
@@ -259,10 +413,20 @@ export default function ThreeViewer() {
     };
     animate();
 
-    // グローバル関数としてエクスポート（後でUIと連携）
+    // グローバル関数としてエクスポート
     (
-      window as typeof window & { moveElevator: (floor: number) => void }
+      window as typeof window & {
+        moveElevator: (floor: number) => void;
+        setElevatorAction: (action: string) => void;
+      }
     ).moveElevator = moveElevator;
+
+    (
+      window as typeof window & {
+        moveElevator: (floor: number) => void;
+        setElevatorAction: (action: string) => void;
+      }
+    ).setElevatorAction = setElevatorAction;
 
     // リサイズ対応
     const handleResize = () => {

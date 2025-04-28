@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSharedElevatorSystem } from "../contexts/ElevatorSystemContext";
 
 export default function FloorSelector() {
@@ -8,21 +8,34 @@ export default function FloorSelector() {
   const floors = Array.from({ length: 30 }, (_, i) => 30 - i);
   const [selectedFloor, setSelectedFloor] = useState<number | null>(null);
   const elevatorSystem = useSharedElevatorSystem();
+  // エレベーターの現在のフロア（1号機を使用）を追跡
+  const [currentElevatorFloor, setCurrentElevatorFloor] = useState<number>(1);
+  
+  // エレベーターシステムの状態が更新されたら、現在のフロアを取得
+  useEffect(() => {
+    const systemInfo = elevatorSystem.getSystemInfo();
+    if (systemInfo.elevators && systemInfo.elevators.length > 0) {
+      setCurrentElevatorFloor(systemInfo.elevators[0].currentFloor);
+    }
+  }, [elevatorSystem, elevatorSystem.updateCount]);
 
   const handleFloorSelect = (floor: number) => {
-    // 現在のフロアを保存
-    const currentFloor = selectedFloor || 1;
-
     // 選択されたフロアを状態に設定
     setSelectedFloor(floor);
+
+    // エレベーターシステムの最新情報を取得
+    const systemInfo = elevatorSystem.getSystemInfo();
+    // エレベーター1号機の現在階を取得（システムから最新の情報を取得）
+    const elevator1 = systemInfo.elevators[0];
+    const actualCurrentFloor = elevator1.currentFloor;
 
     // Three.jsのビジュアル表示を更新（直接フロア番号を渡す）
     (
       window as typeof window & { moveElevator: (floor: number) => void }
     ).moveElevator(floor);
 
-    // リクエスト前に現在のフロアを使用（selectedFloorはまだ更新されていない）
-    elevatorSystem.addRequest(currentFloor, floor);
+    // 実際のエレベーターの現在位置からのリクエストを作成
+    elevatorSystem.addRequest(actualCurrentFloor, floor);
   };
 
   return (
@@ -51,6 +64,12 @@ export default function FloorSelector() {
       <div className="mt-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
         <p className="text-lg font-semibold text-gray-800">
           現在のフロア:{" "}
+          <span className="text-2xl font-bold text-blue-600 ml-2">
+            {currentElevatorFloor}
+          </span>
+        </p>
+        <p className="text-lg font-semibold text-gray-800 mt-2">
+          選択されたフロア:{" "}
           <span className="text-2xl font-bold text-blue-600 ml-2">
             {selectedFloor || "---"}
           </span>
