@@ -47,6 +47,7 @@ elevator-simulation/
 - 状態管理はReactのフック（useState, useReducerなど）を活用します
 - UIコンポーネントはTailwindCSSを使用してスタイリングします
 - コンポーネントの配置はapp/内のディレクトリ構造に従います
+- tsファイルを修正した場合は、リントを実行
 
 ## 開発コマンド
 
