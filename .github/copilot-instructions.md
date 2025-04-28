@@ -55,6 +55,7 @@ elevator-simulation/
 - ビルド: `bun run build`
 - 本番用サーバーの起動: `bun run start`
 - リント: `bun run lint`
+- テスト: `bun run test`
 
 ## 今後の開発計画
 
