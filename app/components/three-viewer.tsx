@@ -14,6 +14,13 @@ export default function ThreeViewer() {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xf0f0f0);
 
+    // ライト追加
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7); // 柔らかい全体光
+    scene.add(ambientLight);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0); // 太陽光風
+    directionalLight.position.set(10, 40, 20);
+    scene.add(directionalLight);
+
     const camera = new THREE.PerspectiveCamera(
       75,
       mountRef.current.clientWidth / mountRef.current.clientHeight,
@@ -34,36 +41,156 @@ export default function ThreeViewer() {
     controls.enableDamping = true;
 
     // 建物の定数を定義
-    const FLOOR_COUNT = 10; // フロア数
-    const FLOOR_HEIGHT = 1.5; // フロアあたりの高さ
+    const FLOOR_COUNT = 30; // フロア数を高層マンション風に増加
+    const FLOOR_HEIGHT = 1.2; // フロアあたりの高さ
     const BUILDING_HEIGHT = FLOOR_COUNT * FLOOR_HEIGHT; // 建物の総高さ
     const BUILDING_WIDTH = 8;
     const BUILDING_DEPTH = 8;
 
-    // 簡単なビルディングとエレベーターの表示
+    // 建物パーツのグループ化（透明度を一括制御するため）
+    const buildingParts = new THREE.Group();
+    scene.add(buildingParts);
+
+    // 本体（外壁）
     const buildingGeometry = new THREE.BoxGeometry(
       BUILDING_WIDTH,
       BUILDING_HEIGHT,
       BUILDING_DEPTH,
     );
-    const buildingMaterial = new THREE.MeshBasicMaterial({
-      color: 0xcccccc,
-      transparent: true,
-      opacity: 0.5,
-      wireframe: true,
+    const buildingMaterial = new THREE.MeshStandardMaterial({
+      color: 0xf5f5f5, // 白系
+      roughness: 0.7,
+      metalness: 0.1,
+      transparent: true, // 透明化可能に設定
+      opacity: 1.0, // 初期値は不透明
+      name: "building", // マテリアル名を追加
     });
     const building = new THREE.Mesh(buildingGeometry, buildingMaterial);
-
-    // 建物の底面が地面に接するように配置
     building.position.y = BUILDING_HEIGHT / 2;
-    scene.add(building);
+    buildingParts.add(building); // グループに追加
 
-    // エレベーターの3Dモデルを作成
-    const elevatorGeometry = new THREE.BoxGeometry(2, FLOOR_HEIGHT * 0.9, 2);
-    const elevatorMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+    // バルコニーと手すり
+    for (let i = 0; i < FLOOR_COUNT; i++) {
+      // バルコニー床
+      const balconyGeometry = new THREE.BoxGeometry(
+        BUILDING_WIDTH + 0.6,
+        0.12,
+        BUILDING_DEPTH + 0.6,
+      );
+      const balconyMaterial = new THREE.MeshStandardMaterial({
+        color: 0xe0e0e0,
+        roughness: 0.8,
+        transparent: true,
+        opacity: 1.0,
+        name: "balcony", // マテリアル名を追加
+      });
+      const balcony = new THREE.Mesh(balconyGeometry, balconyMaterial);
+      balcony.position.y = i * FLOOR_HEIGHT + 0.06;
+      buildingParts.add(balcony);
+
+      // 手すり（ガラス風）
+      const glassGeometry = new THREE.BoxGeometry(
+        BUILDING_WIDTH + 0.4,
+        0.3,
+        0.08,
+      );
+      const glassMaterial = new THREE.MeshStandardMaterial({
+        color: 0x99ccff,
+        transparent: true,
+        opacity: 0.35,
+        roughness: 0.1,
+        metalness: 0.5,
+        name: "glass", // マテリアル名を追加
+      });
+      // 前面
+      const glassFront = new THREE.Mesh(glassGeometry, glassMaterial);
+      glassFront.position.set(
+        0,
+        i * FLOOR_HEIGHT + 0.22,
+        (BUILDING_DEPTH + 0.34) / 2,
+      );
+      buildingParts.add(glassFront); // グループに追加
+      
+      // 背面
+      const glassBack = new THREE.Mesh(glassGeometry, glassMaterial);
+      glassBack.position.set(
+        0,
+        i * FLOOR_HEIGHT + 0.22,
+        -(BUILDING_DEPTH + 0.34) / 2,
+      );
+      buildingParts.add(glassBack); // グループに追加
+      
+      // 左右
+      const glassSideGeometry = new THREE.BoxGeometry(
+        0.08,
+        0.3,
+        BUILDING_DEPTH + 0.4,
+      );
+      // 右
+      const glassRight = new THREE.Mesh(glassSideGeometry, glassMaterial);
+      glassRight.position.set(
+        (BUILDING_WIDTH + 0.34) / 2,
+        i * FLOOR_HEIGHT + 0.22,
+        0,
+      );
+      buildingParts.add(glassRight); // グループに追加
+      
+      // 左
+      const glassLeft = new THREE.Mesh(glassSideGeometry, glassMaterial);
+      glassLeft.position.set(
+        -(BUILDING_WIDTH + 0.34) / 2,
+        i * FLOOR_HEIGHT + 0.22,
+        0,
+      );
+      buildingParts.add(glassLeft); // グループに追加
+
+      // 窓（各階に複数配置）
+      const windowGeometry = new THREE.BoxGeometry(0.9, 0.7, 0.05);
+      const windowMaterial = new THREE.MeshStandardMaterial({
+        color: 0x87bde6,
+        roughness: 0.2,
+        metalness: 0.6,
+        transparent: true,
+        opacity: 0.7,
+        name: "window", // マテリアル名を追加
+      });
+      for (let w = -2; w <= 2; w++) {
+        const windowMesh = new THREE.Mesh(windowGeometry, windowMaterial);
+        windowMesh.position.set(
+          w * 1.6,
+          i * FLOOR_HEIGHT + 0.6,
+          BUILDING_DEPTH / 2 + 0.03,
+        );
+        buildingParts.add(windowMesh); // グループに追加
+      }
+    }
+
+    // グレーの縦ライン（外観アクセント）
+    const accentGeometry = new THREE.BoxGeometry(0.18, BUILDING_HEIGHT, 0.18);
+    const accentMaterial = new THREE.MeshStandardMaterial({
+      color: 0x444444,
+      roughness: 0.5,
+    });
+    for (let a = -3; a <= 3; a += 2) {
+      const accent = new THREE.Mesh(accentGeometry, accentMaterial);
+      accent.position.set(
+        a * 1.1,
+        BUILDING_HEIGHT / 2,
+        BUILDING_DEPTH / 2 + 0.12,
+      );
+      buildingParts.add(accent); // グループに追加
+    }
+
+    // エレベーターの3Dモデル（中央に表示、外観の邪魔にならないよう小さめ）
+    const elevatorGeometry = new THREE.BoxGeometry(
+      1.2,
+      FLOOR_HEIGHT * 0.9,
+      1.2,
+    );
+    const elevatorMaterial = new THREE.MeshStandardMaterial({
+      color: 0x00ff00,
+    });
     const elevator = new THREE.Mesh(elevatorGeometry, elevatorMaterial);
-
-    // 1階を初期位置として設定（建物の底から少し上）
     elevator.position.y = FLOOR_HEIGHT / 2;
     scene.add(elevator);
 
@@ -84,13 +211,43 @@ export default function ThreeViewer() {
     const animate = () => {
       requestAnimationFrame(animate);
 
-      // エレベーターの位置を更新
+      // エレベーターの位置を更新 - 移動速度を遅くして透明状態の持続時間を長く
       if (elevator.position.y !== targetFloor) {
-        const direction = targetFloor > elevator.position.y ? 0.1 : -0.1;
+        const direction = targetFloor > elevator.position.y ? 0.05 : -0.05; // 速度を半分に
         elevator.position.y =
-          Math.abs(targetFloor - elevator.position.y) < 0.1
+          Math.abs(targetFloor - elevator.position.y) < 0.05
             ? targetFloor
             : elevator.position.y + direction;
+
+        // ビルをより透明にする（0.5→0.25に変更）
+        buildingParts.traverse((child) => {
+          if (child instanceof THREE.Mesh) {
+            // ガラス部分は元々透明なので、それほど透明にしない
+            if (child.material.opacity < 0.5) {
+              child.material.opacity = Math.min(child.material.opacity, 0.2);
+            } else {
+              child.material.opacity = 0.25; // より透明に
+            }
+          }
+        });
+      } else {
+        // エレベーターが目的階に到着したら元の透明度に戻す
+        buildingParts.traverse((child) => {
+          if (child instanceof THREE.Mesh) {
+            // ガラス部分
+            if (child.material.name === "glass") {
+              child.material.opacity = 0.35;
+            } 
+            // 窓
+            else if (child.material.name === "window") {
+              child.material.opacity = 0.7;
+            } 
+            // その他の部分
+            else {
+              child.material.opacity = 1.0;
+            }
+          }
+        });
       }
 
       controls.update();
