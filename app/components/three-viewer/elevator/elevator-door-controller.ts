@@ -8,7 +8,11 @@ export class ElevatorDoorController {
   constructor(
     private model: ElevatorModel,
     private state: ElevatorState,
-    private updateHistory: (fromFloor: number, toFloor: number, action: string) => void,
+    private updateHistory: (
+      fromFloor: number,
+      toFloor: number,
+      action: string,
+    ) => void,
     private setElevatorAction: (action: ElevatorStatus) => void,
     private checkAndProcessQueue: () => void,
   ) {}
@@ -113,7 +117,7 @@ export class ElevatorDoorController {
   /**
    * ドアの開閉状態を設定
    * @param action エレベーターのアクション
-   * @returns 
+   * @returns
    */
   public handleDoorAction(action: ElevatorStatus): void {
     switch (action) {

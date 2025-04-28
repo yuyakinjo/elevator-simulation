@@ -108,7 +108,8 @@ export class ElevatorInfoDisplay {
     });
 
     const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(0, 1.1, 0); // フロア表示の上に配置
+    // 位置を真上に変更（方向に応じて位置は後で更新される）
+    mesh.position.set(0, 0, 0);
 
     return mesh;
   }
@@ -221,6 +222,15 @@ export class ElevatorInfoDisplay {
     const newArrowTexture = new THREE.CanvasTexture(arrowCanvas);
     arrowTexture.map = newArrowTexture;
     arrowTexture.needsUpdate = true;
+
+    // 方向に応じて矢印の位置を設定
+    if (direction === "up") {
+      this.arrowDisplay.position.set(0, 0.8, 0); // エレベーターの真上に配置
+    } else if (direction === "down") {
+      this.arrowDisplay.position.set(0, -0.8, 0); // エレベーターの真下に配置
+    } else {
+      this.arrowDisplay.position.set(0, 0, 0); // 方向なしの場合、中央に配置
+    }
   }
 
   // エレベーターの位置に合わせて表示位置を更新

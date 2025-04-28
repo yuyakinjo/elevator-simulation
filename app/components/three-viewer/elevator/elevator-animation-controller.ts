@@ -10,7 +10,11 @@ export class ElevatorAnimationController {
     private model: ElevatorModel,
     private state: ElevatorState,
     private setBuildingTransparency: (opacity: number) => void,
-    private updateHistory: (fromFloor: number, toFloor: number, action: string) => void,
+    private updateHistory: (
+      fromFloor: number,
+      toFloor: number,
+      action: string,
+    ) => void,
     private setElevatorAction: (action: ElevatorStatus) => void,
   ) {}
 

@@ -1,6 +1,6 @@
 import type { ElevatorSystemWindow } from "@/app/utils/three/window-interface";
 import * as THREE from "three";
-import { ElevatorAction, ElevatorStatus, FLOOR_HEIGHT } from "../constants";
+import { ElevatorStatus, FLOOR_HEIGHT } from "../constants";
 import type { ElevatorModel, ElevatorState } from "../types";
 import { ElevatorAnimationController } from "./elevator-animation-controller";
 import { ElevatorDoorController } from "./elevator-door-controller";
