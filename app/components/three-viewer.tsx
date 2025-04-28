@@ -76,7 +76,9 @@ export default function ThreeViewer() {
     animate();
 
     // グローバル関数としてエクスポート（後でUIと連携）
-    (window as any).moveElevator = moveElevator;
+    (
+      window as typeof window & { moveElevator: (floor: number) => void }
+    ).moveElevator = moveElevator;
 
     // リサイズ対応
     const handleResize = () => {
