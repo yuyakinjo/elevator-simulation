@@ -1,5 +1,6 @@
 import ElevatorControls from "@/app/components/elevator-controls";
 import ElevatorHistory from "@/app/components/elevator-history";
+import ElevatorStatistics from "@/app/components/elevator-statistics";
 import FloorSelector from "@/app/components/floor-selector";
 import { ThreeViewer } from "@/app/components/three-viewer/three-viewer";
 
@@ -13,6 +14,8 @@ export default function ElevatorSimulation() {
         <ElevatorControls />
         <div className="my-4" />
         <FloorSelector />
+        <div className="my-4" />
+        <ElevatorStatistics />
         <div className="my-4" />
         <ElevatorHistory />
       </div>
