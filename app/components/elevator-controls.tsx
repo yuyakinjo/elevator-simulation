@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useSharedElevatorSystem } from "../contexts/ElevatorSystemContext";
+import ElevatorInfoToggle from "./elevator-info-toggle";
 import FloorLabelsToggle from "./floor-labels-toggle";
 
 export default function ElevatorControls() {
@@ -61,6 +62,11 @@ export default function ElevatorControls() {
         <div className="border-t pt-4 mt-2">
           {/* フロアラベル切り替え用の専用コンポーネントを使用 */}
           <FloorLabelsToggle />
+        </div>
+        
+        <div className="border-t pt-4 mt-2">
+          {/* エレベーター情報表示切り替え用の専用コンポーネントを使用 */}
+          <ElevatorInfoToggle />
         </div>
 
         <button

@@ -1,6 +1,5 @@
 import type * as THREE from "three";
 import type { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import type { ElevatorStatus } from "./constants";
 
 export interface SceneSetup {
   scene: THREE.Scene;
@@ -17,22 +16,27 @@ export interface BuildingModel {
   setBuildingTransparency: (opacity: number) => void;
 }
 
+// エレベーターモデルの定義
 export interface ElevatorModel {
-  id: number;
-  group: THREE.Group;
-  cabin: THREE.Mesh;
-  leftDoor: THREE.Mesh;
-  rightDoor: THREE.Mesh;
+  id: number; // エレベーターID
+  group: THREE.Group; // エレベーター全体のグループ
+  cabin: THREE.Mesh; // エレベーターキャビン
+  leftDoor: THREE.Mesh; // 左ドア
+  rightDoor: THREE.Mesh; // 右ドア
 }
 
+// エレベーターの状態
 export interface ElevatorState {
-  status: ElevatorStatus;
-  currentFloor: number;
-  targetFloor: number;
-  floorQueue: number[];
+  status: string; // 現在のステータス
+  currentFloor: number; // 現在のフロア
+  targetFloor: number; // 目標フロアの位置（高さ）
+  floorQueue: number[]; // 移動予定のフロア順序
   doorAnimation: {
-    isAnimating: boolean;
-    openAmount: number;
-    targetOpenAmount: number;
+    isAnimating: boolean; // ドアのアニメーション中かどうか
+    openAmount: number; // ドアの開き具合（0-1）
+    targetOpenAmount: number; // 目標開き具合
   };
 }
+
+// エレベーターの進行方向
+export type ElevatorDirection = "up" | "down" | "none";

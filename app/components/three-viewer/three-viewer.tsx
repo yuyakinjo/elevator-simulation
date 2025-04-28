@@ -42,10 +42,11 @@ export function ThreeViewer() {
       // エレベーターモデル作成
       const elevator = createElevatorModel(scene, i, offsetX);
 
-      // コントローラー作成
+      // コントローラー作成（シーンを渡してエレベーター情報表示を初期化）
       const controller = new ElevatorController(
         elevator,
         building.setBuildingTransparency,
+        scene,
       );
       elevatorControllers.push(controller);
     }
@@ -95,6 +96,26 @@ export function ThreeViewer() {
 
     elevatorWindow.setFloorLabelsVisibility = (visible: boolean) => {
       floorLabels.setVisibility(visible);
+    };
+
+    // エレベーター情報表示の表示/非表示切り替えAPI
+    elevatorWindow.toggleElevatorInfo = () => {
+      // 全てのエレベーターで同じ表示状態を維持
+      const result = elevatorControllers[0].toggleInfoDisplayVisibility();
+
+      // 他のエレベーターも同じ状態に更新
+      for (let i = 1; i < elevatorControllers.length; i++) {
+        elevatorControllers[i].setInfoDisplayVisibility(result);
+      }
+
+      return result;
+    };
+
+    elevatorWindow.setElevatorInfoVisibility = (visible: boolean) => {
+      // 全てのエレベーターの表示状態を設定
+      for (const controller of elevatorControllers) {
+        controller.setInfoDisplayVisibility(visible);
+      }
     };
 
     // アニメーションループ

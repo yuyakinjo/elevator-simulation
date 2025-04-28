@@ -1,14 +1,17 @@
 import type { ElevatorSystemWindow } from "@/app/utils/three/window-interface";
 import * as THREE from "three";
 import { ElevatorAction, ElevatorStatus, FLOOR_HEIGHT } from "../constants";
-import type { ElevatorModel, ElevatorState } from "../types";
+import type { ElevatorDirection, ElevatorModel, ElevatorState } from "../types";
+import { ElevatorInfoDisplay } from "./elevator-info-display";
 
 export class ElevatorController {
   private state: ElevatorState;
+  private infoDisplay: ElevatorInfoDisplay | null = null;
 
   constructor(
     private model: ElevatorModel,
     private setBuildingTransparency: (opacity: number) => void,
+    private scene?: THREE.Scene,
   ) {
     this.state = {
       status: ElevatorStatus.STOPPED,
@@ -27,6 +30,11 @@ export class ElevatorController {
     this.setElevatorAction = this.setElevatorAction.bind(this);
     this.updateAnimation = this.updateAnimation.bind(this);
     this.getElevatorQueue = this.getElevatorQueue.bind(this);
+
+    // シーンが提供されている場合、エレベーター情報表示を初期化
+    if (scene) {
+      this.infoDisplay = new ElevatorInfoDisplay({ scene }, model.id);
+    }
   }
 
   // 各フロアの高さを計算する関数
@@ -73,6 +81,54 @@ export class ElevatorController {
         action,
       );
     }
+  }
+
+  // 現在のエレベーター方向を計算
+  private calculateDirection(): ElevatorDirection {
+    if (this.state.status !== ElevatorStatus.MOVING) {
+      return "none";
+    }
+
+    const currentPosition = this.model.group.position.y;
+    const targetPosition = this.state.targetFloor;
+
+    if (targetPosition > currentPosition) {
+      return "up";
+    }
+    if (targetPosition < currentPosition) {
+      return "down";
+    }
+
+    return "none";
+  }
+
+  // エレベーター情報表示を設定
+  public setInfoDisplay(infoDisplay: ElevatorInfoDisplay | null): void {
+    this.infoDisplay = infoDisplay;
+
+    // 初期状態を設定
+    if (this.infoDisplay) {
+      this.infoDisplay.updateInfo(
+        this.state.currentFloor,
+        this.calculateDirection(),
+      );
+      this.infoDisplay.updatePosition(this.state.currentFloor, 0.8); // 少し上に配置
+    }
+  }
+
+  // エレベーター情報表示の表示/非表示を設定
+  public setInfoDisplayVisibility(visible: boolean): void {
+    if (this.infoDisplay) {
+      this.infoDisplay.setVisibility(visible);
+    }
+  }
+
+  // エレベーター情報表示の表示/非表示を切り替え
+  public toggleInfoDisplayVisibility(): boolean {
+    if (this.infoDisplay) {
+      return this.infoDisplay.toggleVisibility();
+    }
+    return false;
   }
 
   // 外部公開API: エレベーター移動指示
@@ -205,6 +261,24 @@ export class ElevatorController {
 
     // 透明度の更新
     this.updateBuildingTransparency(camera);
+
+    // エレベーター情報表示の更新
+    this.updateInfoDisplay();
+  }
+
+  // エレベーター情報表示の更新
+  private updateInfoDisplay(): void {
+    if (this.infoDisplay) {
+      // 現在の階と方向を更新
+      this.infoDisplay.updateInfo(
+        this.state.currentFloor,
+        this.calculateDirection(),
+      );
+
+      // 位置を更新（エレベーターの上に配置）
+      const currentPosition = this.model.group.position.y;
+      this.infoDisplay.updatePosition(this.state.currentFloor, 0.8);
+    }
   }
 
   private updateElevatorPosition(): void {

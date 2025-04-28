@@ -18,4 +18,6 @@ export interface ElevatorSystemWindow extends Window {
   };
   toggleFloorLabels?: () => boolean; // フロアラベルの表示/非表示を切り替える
   setFloorLabelsVisibility?: (visible: boolean) => void; // フロアラベルの表示/非表示を設定
+  toggleElevatorInfo?: () => boolean; // エレベーター情報表示の表示/非表示を切り替える
+  setElevatorInfoVisibility?: (visible: boolean) => void; // エレベーター情報表示の表示/非表示を設定
 }
