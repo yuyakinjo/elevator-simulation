@@ -1,5 +1,6 @@
 "use client";
 
+import type { ElevatorSystemWindow } from "@/app/utils/three/window-interface";
 import { useEffect, useRef, useState } from "react";
 import { ELEVATOR_CONFIG, ElevatorSystem } from "../models/elevator";
 
@@ -13,7 +14,8 @@ export function useElevatorSystem() {
   // グローバル参照用にシステムを設定
   useEffect(() => {
     // グローバルにエレベーターシステムの参照を保存
-    (window as any).__ELEVATOR_SYSTEM__ = {
+    const elevatorWindow = window as ElevatorSystemWindow;
+    elevatorWindow.__ELEVATOR_SYSTEM__ = {
       updateHistory: (
         elevatorId: number,
         fromFloor: number,
@@ -21,7 +23,8 @@ export function useElevatorSystem() {
         action: string,
       ) => {
         // アクションタイプを内部形式に変換
-        let internalAction = "MOVE";
+        let internalAction: "MOVE" | "DOOR_OPEN" | "DOOR_CLOSE" | "STOP" =
+          "MOVE";
         if (action === "OPENING_DOORS") internalAction = "DOOR_OPEN";
         else if (action === "CLOSING_DOORS") internalAction = "DOOR_CLOSE";
         else if (action === "STOPPED") internalAction = "STOP";
@@ -40,8 +43,9 @@ export function useElevatorSystem() {
     };
 
     return () => {
-      // クリーンアップ時に参照を削除
-      delete (window as any).__ELEVATOR_SYSTEM__;
+      // クリーンアップ時に参照を削除 (delete演算子の代わりにundefined代入)
+      const elevatorWindow = window as ElevatorSystemWindow;
+      elevatorWindow.__ELEVATOR_SYSTEM__ = undefined;
     };
   }, [system]);
 
@@ -89,9 +93,7 @@ export function useElevatorSystem() {
   // キュー情報を取得する関数
   const getQueueInfo = () => {
     // Three.jsとの連携用にグローバルで定義されているキュー情報を取得
-    const windowWithQueue = window as typeof window & {
-      getElevatorQueue?: (elevatorId: number) => number[];
-    };
+    const windowWithQueue = window as ElevatorSystemWindow;
 
     if (typeof windowWithQueue.getElevatorQueue === "function") {
       // エレベーターID 0 (最初のエレベーター) のキューを取得

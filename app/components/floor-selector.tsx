@@ -25,7 +25,7 @@ export default function FloorSelector() {
         : systemInfo.pendingRequests.map((req) => req.toFloor);
       setNextFloors(queue);
     }
-  }, [elevatorSystem, elevatorSystem.updateCount]);
+  }, [elevatorSystem]);
 
   const handleFloorSelect = (floor: number) => {
     // 選択されたフロアを状態に設定
