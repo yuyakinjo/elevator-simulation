@@ -1,18 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import type { ElevatorSystemWindow } from "@/app/utils/three/window-interface";
+import { useEffect, useState } from "react";
 
 interface ElevatorInfoToggleProps {
   className?: string;
 }
 
-export default function ElevatorInfoToggle({ className = "" }: ElevatorInfoToggleProps) {
+export default function ElevatorInfoToggle({
+  className = "",
+}: ElevatorInfoToggleProps) {
   const [showElevatorInfo, setShowElevatorInfo] = useState(true);
 
   // 初期化時にエレベーター情報表示状態を設定（クライアントサイドでのみ実行）
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const elevatorWindow = window as ElevatorSystemWindow;
       if (elevatorWindow.setElevatorInfoVisibility) {
         elevatorWindow.setElevatorInfoVisibility(true); // 初期値を直接使用
@@ -22,7 +24,7 @@ export default function ElevatorInfoToggle({ className = "" }: ElevatorInfoToggl
 
   // showElevatorInfoの変更時に実行される
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const elevatorWindow = window as ElevatorSystemWindow;
       if (elevatorWindow.setElevatorInfoVisibility) {
         elevatorWindow.setElevatorInfoVisibility(showElevatorInfo);
@@ -31,7 +33,7 @@ export default function ElevatorInfoToggle({ className = "" }: ElevatorInfoToggl
   }, [showElevatorInfo]); // showElevatorInfoが変更されたときのみ実行
 
   const handleElevatorInfoToggle = () => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const elevatorWindow = window as ElevatorSystemWindow;
       if (elevatorWindow.toggleElevatorInfo) {
         const isVisible = elevatorWindow.toggleElevatorInfo();
