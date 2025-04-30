@@ -3,17 +3,19 @@
 ## プロジェクト概要
 
 このプロジェクトは、Web上でエレベーターの動作をシミュレーションするアプリケーションです。
-Three.jsを活用して3Dグラフィックスでエレベーターの動きを表現し、リアルタイムで操作・監視できる機能を提供します。
+Babylon.jsを活用して3Dグラフィックスでエレベーターの動きを表現し、リアルタイムで操作・監視できる機能を提供します。
 
 ## 技術スタック
 
-- **フロントエンド**: React (v19)
-- **フレームワーク**: Next.js (v15.3.1)
-- **3Dレンダリング**: Three.js (v0.176.0)
-- **スタイリング**: TailwindCSS (v4)
+- **フロントエンド**: React
+- **フレームワーク**: Next.js
+- **3Dレンダリング**: Babylon.js
+- **スタイリング**: TailwindCSS
 - **パッケージマネージャー**: Bun
 - **リンター/フォーマッター**: Biome
 - **ビルドツール**: Turbopack
+- **テストフレームワーク**: Vitest
+- **状態管理**: Zustand
 
 ## プロジェクト構成
 
@@ -21,19 +23,6 @@ Three.jsを活用して3Dグラフィックスでエレベーターの動きを�
 elevator-simulation/
 ├── .github/               # GitHub関連ファイル
 app/
-├── components/
-│   ├── elevator-controls.tsx      - Signalsを使った制御UI
-│   ├── elevator-history.tsx       - Signalsを使った履歴表示
-│   ├── elevator-simulation.tsx    - メインレイアウトコンポーネント
-│   ├── floor-selector.tsx        - Signalsを使ったフロア選択UI
-│   └── three-viewer.tsx          - useSyncExternalStoreを使ったThree.js連携
-├── contexts/
-│   └── ElevatorSystemContext.tsx  - Signalsストアへのアクセス提供
-├── models/
-│   └── elevator.ts               - エレベーターの基本モデル定義
-├── stores/
-│   ├── elevatorSignalStore.ts    - Signalsベースの状態管理
-│   └── elevatorThreeStore.ts     - Three.js用の外部ストア
 ├── public/                # 静的アセット
 │   ├── file.svg           # アイコン等のSVG画像
 │   ├── globe.svg
@@ -52,11 +41,11 @@ app/
 
 ## 開発のヒント
 
-- エレベーターの動きのシミュレーションはThree.jsを使用して実装する予定です
-- 状態管理はReactのフック（useState, useReducerなど）を活用します
+- エレベーターの動きのシミュレーションはBabylon.jsを使用して実装する予定です
+- 状態管理はzustandを使用
 - UIコンポーネントはTailwindCSSを使用してスタイリングします
 - コンポーネントの配置はapp/内のディレクトリ構造に従います
-- tsファイルを修正した場合は、リントを実行
+- TSファイルを修正した場合は、リントを実行
 
 ## 開発コマンド
 
@@ -81,19 +70,10 @@ app/
 
 ## イベント駆動アーキテクチャの指針
 
-- **useSyncExternalStore**: Three.jsなど外部ライブラリとの状態同期には`useSyncExternalStore`を使用してください
-- **Preact Signals**: UIコンポーネント間の状態共有と更新には`@preact/signals-react`を使用してください
 - **グローバル関数の排除**: windowオブジェクトにグローバル関数を追加する代わりに、ストアベースの通信を使用してください
 - **useEffectの削減**: 副作用はイベント駆動モデルを通じて処理し、useEffectの使用を最小限にとどめてください
-- **コンポーネント間通信**: 親子関係のないコンポーネント間の通信はContextやSignalsを使用してください
-
-## 改善ポイント
-
-- **アニメーション最適化**: Three.jsのレンダリングループを最適化し、パフォーマンスを向上させる
-- **エラー処理の強化**: 各種操作のエラー状態を適切に管理・表示する機能を追加する
-- **テスト追加**: ストアとコンポーネントの単体テストを追加し、品質を確保する
-- **未使用コードの削除**: リファクタリング後に不要となったコード（特にuseEffectやsetTimeout）を削除する
-- **型安全性の向上**: 型定義をより厳密にし、コンパイル時のエラー検出を強化する
+- **コンポーネント間通信**: コンポーネント間の通信は、ストアを介して行い、propsやcontextを使用しないようにしてください
+- **状態管理**: Zustandを使用して、アプリケーションの状態を管理しベストプラクティスに従ってください
 
 ## GitHub Copilotへの指示
 
@@ -111,3 +91,4 @@ app/
 6. 統計情報の表示機能
 7. ビルディングモデルの詳細化と環境の拡張
 8. ユーザーカスタマイズ可能なシミュレーション設定
+9. テストの追加
