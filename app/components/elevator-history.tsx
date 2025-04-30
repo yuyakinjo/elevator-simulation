@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useSharedElevatorSystem } from "../contexts/ElevatorSystemContext";
-import type { MoveHistoryEntry } from "../models/elevator";
+import { useState } from "react";
+import { useElevatorStore } from "../stores/elevatorSignalStore";
 
 // 日時をフォーマットする関数
 const formatTimestamp = (timestamp: number): string => {
@@ -29,32 +28,22 @@ const translateAction = (action: string): string => {
   }
 };
 
-export default function ElevatorHistory() {
-  const elevatorSystem = useSharedElevatorSystem();
-  const [history, setHistory] = useState<
-    Array<{ elevatorId: number; history: MoveHistoryEntry[] }>
-  >([]);
-  const [selectedElevatorId, setSelectedElevatorId] = useState<number | null>(
-    null,
+export function ElevatorHistory() {
+  // Zustandからキャッシュされた履歴情報を取得（elevatorHistory状態を直接参照）
+  const history = useElevatorStore((state) => state.elevatorHistory);
+  const resetElevatorSystem = useElevatorStore(
+    (state) => state.resetElevatorSystem,
   );
 
-  // 更新カウンタを監視して履歴を更新
-  const updateCount = elevatorSystem.updateCount;
+  // ローカルUI状態
+  const [selectedElevatorId, setSelectedElevatorId] = useState<number>(0);
 
-  // 履歴を更新 - 変更があるたびに再取得
-  useEffect(() => {
-    const allHistory = elevatorSystem.getMoveHistory();
-    setHistory(allHistory);
-  }, [elevatorSystem]);
+  // 選択エレベーター変更ハンドラ
+  const handleElevatorSelect = (id: number) => {
+    setSelectedElevatorId(id);
+  };
 
-  // 初期選択状態を一度だけ設定
-  useEffect(() => {
-    if (history.length > 0 && selectedElevatorId === null) {
-      setSelectedElevatorId(history[0].elevatorId);
-    }
-  }, [history, selectedElevatorId]);
-
-  // 表示するエレベーターの履歴をフィルタリング
+  // 表示するエレベーターの履歴を取得
   const filteredHistory =
     history.find((item) => item.elevatorId === selectedElevatorId)?.history ||
     [];
@@ -76,7 +65,7 @@ export default function ElevatorHistory() {
                 ? "bg-blue-500 text-white font-bold"
                 : "bg-gray-100 hover:bg-gray-200"
             } rounded-t-md transition-colors mr-2`}
-            onClick={() => setSelectedElevatorId(item.elevatorId)}
+            onClick={() => handleElevatorSelect(item.elevatorId)}
           >
             エレベーター {item.elevatorId + 1}
           </button>
@@ -156,9 +145,7 @@ export default function ElevatorHistory() {
         <button
           type="button"
           className="px-2 py-1 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300 transition-colors"
-          onClick={() => {
-            elevatorSystem.resetSystem();
-          }}
+          onClick={resetElevatorSystem}
         >
           履歴クリア
         </button>

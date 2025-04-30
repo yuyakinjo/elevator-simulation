@@ -3,32 +3,23 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
+import { useElevatorStore } from "../stores/elevatorSignalStore";
+import { useElevatorThreeStore } from "../stores/elevatorThreeStore";
 
-// エレベーターシステムのウィンドウ拡張用の型定義
-interface ElevatorSystemWindow extends Window {
-  moveElevator?: (floor: number) => void;
-  setElevatorAction?: (action: string) => void;
-  getElevatorQueue?: () => number[];
-  updateElevatorSystemHistory?: (
-    fromFloor: number,
-    toFloor: number,
-    action: string,
-  ) => void;
-  updateElevatorCurrentFloor?: (floor: number) => void; // 現在のフロアを更新する関数を追加
-  __ELEVATOR_SYSTEM__?: {
-    updateHistory: (
-      elevatorId: number,
-      fromFloor: number,
-      toFloor: number,
-      action: string,
-    ) => void;
-    updateCurrentFloor?: (elevatorId: number, floor: number) => void; // 現在のフロアを更新するメソッドを追加
-  };
-}
-
-export default function ThreeViewer() {
+// Three.jsビューアーコンポーネント
+export function ThreeViewer() {
   const mountRef = useRef<HTMLDivElement>(null);
 
+  // Zustandストアから状態を取得
+  const threeState = useElevatorThreeStore();
+  const updateElevatorHistory = useElevatorStore(
+    (state) => state.updateElevatorHistory,
+  );
+  const updateElevatorCurrentFloor = useElevatorStore(
+    (state) => state.updateElevatorCurrentFloor,
+  );
+
+  // コンポーネントがマウントされたらThree.jsを初期化
   useEffect(() => {
     if (!mountRef.current) return;
 
@@ -260,8 +251,7 @@ export default function ThreeViewer() {
     // エレベーターグループの初期位置
     elevatorGroup.position.y = FLOOR_HEIGHT / 2;
 
-    // エレベーターの状態
-    let elevatorStatus = "STOPPED";
+    // ドアアニメーション状態オブジェクト
     const doorAnimation = {
       isAnimating: false,
       openAmount: 0, // 0: 閉じている、1: 開いている
@@ -274,165 +264,62 @@ export default function ThreeViewer() {
       return (floor - 1) * FLOOR_HEIGHT + FLOOR_HEIGHT / 2;
     };
 
-    // エレベーターの動作ロジック
-    let targetFloor = calculateFloorHeight(1); // 初期フロアは1階
-    // 目標フロアをキューとして管理（letで宣言してmutable化）
-    const floorQueue: number[] = [];
-    // 現在のフロア（数値）を保持
-    let currentFloorNumber = 1;
-
-    // エレベーター移動処理を行う関数
-    const processElevatorMovement = () => {
-      if (floorQueue.length === 0) return;
-
-      // キューから次の目標フロアを取得
-      const nextFloor = floorQueue[0];
-      targetFloor = calculateFloorHeight(nextFloor);
-
-      // 移動中の状態に設定
-      elevatorStatus = "MOVING";
-      // エレベーターカラーを更新（移動中は緑）
-      elevatorCabinMaterial.color.set(0x00ff00);
-
-      // キューから処理した階を削除
-      floorQueue.shift();
-
-      console.log(
-        `移動開始: ${nextFloor}階へ, 残りキュー: [${floorQueue.join(", ")}]`,
-      );
-    };
-
-    // キューの次のフロアがあれば処理を開始
-    const checkAndProcessQueue = () => {
-      if (floorQueue.length > 0) {
-        processElevatorMovement();
-      }
-    };
-
-    // エレベーターに移動を指示する関数
-    const moveElevator = (floor: number) => {
-      // 現在のエレベーター位置の階数を計算（アニメーション用）
-      const currentElevatorY = elevatorGroup.position.y;
-      currentFloorNumber =
-        Math.round((currentElevatorY - FLOOR_HEIGHT / 2) / FLOOR_HEIGHT) + 1;
-
-      console.log(
-        `現在の階: ${currentFloorNumber}, 目的階: ${floor}, 状態: ${elevatorStatus}`,
-      );
-
-      // 現在の階と同じ場合は何もしない
-      if (
-        floor === currentFloorNumber &&
-        (elevatorStatus === "STOPPED" || elevatorStatus === "DOORS_OPEN")
-      ) {
-        console.log("現在の階と同じなので何もしない");
-        return;
-      }
-
-      // すでにキューに含まれている場合は追加しない
-      if (floorQueue.includes(floor)) {
-        console.log(`${floor}階はすでにキューに含まれています`);
-        return;
-      }
-
-      // 目標フロアをキューに追加
-      floorQueue.push(floor);
-      console.log(
-        `${floor}階をキューに追加, 現在のキュー: [${floorQueue.join(", ")}]`,
-      );
-
-      // エレベーターの現在の状態に応じた処理
-      if (elevatorStatus === "STOPPED") {
-        // 停止中なら即座に移動開始
-        processElevatorMovement();
-      } else if (elevatorStatus === "DOORS_OPEN") {
-        // ドアが開いている場合は閉めてから移動
-        setElevatorAction("CLOSING_DOORS");
-      } else if (elevatorStatus === "OPENING_DOORS") {
-        // 何もしない - ドアが開き終わる時のハンドラでキューをチェックする
-      } else if (elevatorStatus === "CLOSING_DOORS") {
-        // 何もしない - ドアが閉まり終わる時のハンドラでキューをチェックする
-      }
-      // MOVINGの場合は何もしない（キューに追加されているので、現在の移動が終わり次第処理される）
-    };
-
-    // エレベーターのアクションを設定する関数
-    const setElevatorAction = (action: string) => {
-      const previousStatus = elevatorStatus;
-      elevatorStatus = action;
-
-      console.log(`エレベーター状態変更: ${previousStatus} -> ${action}`);
-
-      switch (action) {
-        case "OPENING_DOORS":
-          doorAnimation.isAnimating = true;
-          doorAnimation.targetOpenAmount = 1;
-          break;
-        case "CLOSING_DOORS":
-          doorAnimation.isAnimating = true;
-          doorAnimation.targetOpenAmount = 0;
-          // ドアが閉まり終わったらキューをチェック
-          setTimeout(() => {
-            if (elevatorStatus === "CLOSING_DOORS") {
-              console.log("ドアが閉まりました");
-              checkAndProcessQueue();
-            }
-          }, 2000);
-          break;
-        case "DOORS_OPEN":
-          doorAnimation.openAmount = 1;
-          doorAnimation.isAnimating = false;
-          break;
-        case "STOPPED":
-          // 停止状態にはエレベーターをライトグレーに
-          elevatorCabinMaterial.color.set(0xd3d3d3);
-          // 停止したらキューをチェックして次の目的地があれば移動
-          setTimeout(() => {
-            if (elevatorStatus === "STOPPED" && floorQueue.length > 0) {
-              console.log("停止状態でキューに要素があるため移動開始");
-              processElevatorMovement();
-            }
-          }, 500);
-          break;
-        case "MOVING":
-          // 移動中は緑色
-          elevatorCabinMaterial.color.set(0x00ff00);
-          break;
+    // エレベーターの色を更新する関数
+    const updateElevatorColor = (status: string) => {
+      if (status === "MOVING") {
+        elevatorCabinMaterial.color.set(0x00ff00); // 移動中は緑
+      } else if (status === "STOPPED") {
+        elevatorCabinMaterial.color.set(0xd3d3d3); // 停止中はライトグレー
+      } else if (status === "DOORS_OPEN") {
+        elevatorCabinMaterial.color.set(0x64b5f6); // ドア開放中は青
+      } else if (status === "OPENING_DOORS" || status === "CLOSING_DOORS") {
+        elevatorCabinMaterial.color.set(0xffd700); // ドア動作中は黄色
       }
     };
 
     // ビルの透明度を設定する関数
     const setBuildingTransparency = (opacity: number) => {
       buildingParts.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
+        if (child instanceof THREE.Mesh && child.material) {
+          const material = child.material as THREE.MeshStandardMaterial;
+
           // マテリアル名に基づいて透明度を調整
-          if (child.material.name === "glass") {
+          if (material.name === "glass") {
             // ガラス部分は元々透明なので元の透明度を維持しつつ調整
-            child.material.opacity = Math.min(0.35, opacity + 0.1);
-          } else if (child.material.name === "window") {
+            material.opacity = Math.min(0.35, opacity + 0.1);
+          } else if (material.name === "window") {
             // 窓も元々半透明なので調整
-            child.material.opacity = Math.min(0.7, opacity + 0.2);
+            material.opacity = Math.min(0.7, opacity + 0.2);
           } else {
             // その他の部分は指定された透明度を適用
-            child.material.opacity = opacity;
+            material.opacity = opacity;
           }
 
           // 透明度が1未満のときは透明設定を有効に
-          child.material.transparent = opacity < 0.99;
+          material.transparent = opacity < 0.99;
         }
       });
     };
 
-    // アニメーションループ内でエレベーターを動かす
+    // アニメーションループ
     const animate = () => {
       requestAnimationFrame(animate);
 
+      // 現在の状態を取得
+      const state = useElevatorThreeStore.getState();
+
+      // エレベーターの状態に基づいて色を更新
+      updateElevatorColor(state.elevatorStatus);
+
       // エレベーターの位置を更新
+      const targetFloorHeight = calculateFloorHeight(state.targetFloor);
+
       if (
-        elevatorGroup.position.y !== targetFloor &&
-        elevatorStatus === "MOVING"
+        elevatorGroup.position.y !== targetFloorHeight &&
+        state.elevatorStatus === "MOVING"
       ) {
-        const direction = targetFloor > elevatorGroup.position.y ? 0.05 : -0.05; // 速度を調整
+        const direction =
+          targetFloorHeight > elevatorGroup.position.y ? 0.05 : -0.05; // 速度を調整
 
         // 移動前の階数を記録
         const previousFloor =
@@ -442,8 +329,8 @@ export default function ThreeViewer() {
 
         // 位置の更新
         elevatorGroup.position.y =
-          Math.abs(targetFloor - elevatorGroup.position.y) < 0.05
-            ? targetFloor
+          Math.abs(targetFloorHeight - elevatorGroup.position.y) < 0.05
+            ? targetFloorHeight
             : elevatorGroup.position.y + direction;
 
         // 移動後の階数を計算
@@ -452,46 +339,29 @@ export default function ThreeViewer() {
             (elevatorGroup.position.y - FLOOR_HEIGHT / 2) / FLOOR_HEIGHT,
           ) + 1;
 
-        // 階数が変わった場合、履歴を更新
+        // 階数が変わった場合、ストアに通知
         if (previousFloor !== currentFloor) {
-          // 型付きのwindowオブジェクトを使用
-          const elevatorWindow = window as ElevatorSystemWindow;
+          // 階数の更新
+          useElevatorThreeStore.getState().updateCurrentFloor(currentFloor);
 
-          // 移動履歴を更新
-          elevatorWindow.updateElevatorSystemHistory?.(
-            previousFloor,
-            currentFloor,
-            "MOVE",
-          );
-
-          // エレベーターの現在階を更新
-          elevatorWindow.updateElevatorCurrentFloor?.(currentFloor);
+          // 移動履歴も更新
+          updateElevatorHistory(0, previousFloor, currentFloor, "MOVE");
         }
 
         // エレベーター移動中はビルを透明に
         setBuildingTransparency(0.25);
       } else if (
-        elevatorGroup.position.y === targetFloor &&
-        elevatorStatus === "MOVING"
+        elevatorGroup.position.y === targetFloorHeight &&
+        state.elevatorStatus === "MOVING"
       ) {
-        // 移動完了時の階数を更新
+        // 到着したら現在の階を更新
         const arrivedFloor =
           Math.round(
             (elevatorGroup.position.y - FLOOR_HEIGHT / 2) / FLOOR_HEIGHT,
           ) + 1;
-        currentFloorNumber = arrivedFloor;
-        console.log(`${arrivedFloor}階に到着しました`);
 
-        // 移動終了の履歴を更新
-        const elevatorWindow = window as ElevatorSystemWindow;
-        elevatorWindow.updateElevatorSystemHistory?.(
-          arrivedFloor,
-          arrivedFloor,
-          "STOPPED",
-        );
-
-        // 目的階に到着したらドアを開ける
-        setElevatorAction("OPENING_DOORS");
+        // ストア経由で通知
+        useElevatorThreeStore.getState().updateCurrentFloor(arrivedFloor);
       }
 
       // ドアのアニメーション
@@ -502,34 +372,6 @@ export default function ThreeViewer() {
           if (doorAnimation.openAmount >= doorAnimation.targetOpenAmount) {
             doorAnimation.openAmount = doorAnimation.targetOpenAmount;
             doorAnimation.isAnimating = false;
-
-            // ドアが完全に開いたらステータス更新
-            if (elevatorStatus === "OPENING_DOORS") {
-              console.log("ドアが開ききりました");
-
-              // ドアが開いた履歴を更新
-              const elevatorWindow = window as ElevatorSystemWindow;
-              elevatorWindow.updateElevatorSystemHistory?.(
-                currentFloorNumber,
-                currentFloorNumber,
-                "OPENING_DOORS",
-              );
-
-              // ドアを開いた状態に設定
-              setTimeout(() => {
-                if (elevatorStatus === "OPENING_DOORS") {
-                  setElevatorAction("DOORS_OPEN");
-
-                  // 一定時間後に閉める
-                  setTimeout(() => {
-                    if (elevatorStatus === "DOORS_OPEN") {
-                      console.log("ドアを閉めます");
-                      setElevatorAction("CLOSING_DOORS");
-                    }
-                  }, 3000); // ドアを開いている時間
-                }
-              }, 100);
-            }
           }
         } else if (doorAnimation.targetOpenAmount < doorAnimation.openAmount) {
           // ドアを閉じる
@@ -537,33 +379,6 @@ export default function ThreeViewer() {
           if (doorAnimation.openAmount <= doorAnimation.targetOpenAmount) {
             doorAnimation.openAmount = doorAnimation.targetOpenAmount;
             doorAnimation.isAnimating = false;
-
-            // ドアが完全に閉まった場合の処理
-            if (elevatorStatus === "CLOSING_DOORS") {
-              console.log("ドアが閉まりました");
-
-              // ドアが閉まった履歴を更新
-              const elevatorWindow = window as ElevatorSystemWindow;
-              elevatorWindow.updateElevatorSystemHistory?.(
-                currentFloorNumber,
-                currentFloorNumber,
-                "CLOSING_DOORS",
-              );
-
-              // 次のステータスを設定
-              setTimeout(() => {
-                if (elevatorStatus === "CLOSING_DOORS") {
-                  // キューに次の移動先があるか確認
-                  if (floorQueue.length > 0) {
-                    console.log("次の目的地へ移動します");
-                    processElevatorMovement();
-                  } else {
-                    // 待機状態に移行
-                    setElevatorAction("STOPPED");
-                  }
-                }
-              }, 100);
-            }
           }
         }
 
@@ -572,20 +387,35 @@ export default function ThreeViewer() {
         rightDoor.position.x = 0.3 + doorAnimation.openAmount * 0.5;
       }
 
+      // ドアのアニメーション状態を更新
+      if (
+        state.elevatorStatus === "OPENING_DOORS" &&
+        doorAnimation.targetOpenAmount !== 1
+      ) {
+        doorAnimation.targetOpenAmount = 1;
+        doorAnimation.isAnimating = true;
+      } else if (
+        state.elevatorStatus === "CLOSING_DOORS" &&
+        doorAnimation.targetOpenAmount !== 0
+      ) {
+        doorAnimation.targetOpenAmount = 0;
+        doorAnimation.isAnimating = true;
+      } else if (
+        state.elevatorStatus === "DOORS_OPEN" &&
+        !doorAnimation.isAnimating
+      ) {
+        doorAnimation.openAmount = 1;
+      }
+
       // カメラとビルの距離に応じた透明度の設定
-      // ビルの中心点（ビルの位置）
-      const buildingCenter = new THREE.Vector3(0, BUILDING_HEIGHT / 2, 0);
-      // カメラとビルの距離を計算
-      const distanceToBuilding = camera.position.distanceTo(buildingCenter);
+      if (state.elevatorStatus !== "MOVING") {
+        const buildingCenter = new THREE.Vector3(0, BUILDING_HEIGHT / 2, 0);
+        const distanceToBuilding = camera.position.distanceTo(buildingCenter);
 
-      // 距離に応じた透明度の閾値
-      const MIN_DISTANCE = 15; // この距離以下では完全不透明
-      const MAX_DISTANCE = 30; // この距離以上では最も透明
+        const MIN_DISTANCE = 15;
+        const MAX_DISTANCE = 30;
 
-      // エレベーターが移動中でない場合にのみ、距離に応じた透明度を適用
-      if (elevatorStatus !== "MOVING") {
         if (distanceToBuilding > MIN_DISTANCE) {
-          // 距離に応じた透明度の計算（MIN_DISTANCEからMAX_DISTANCEの間で線形に変化）
           const transparency = Math.min(
             0.3 +
               ((distanceToBuilding - MIN_DISTANCE) /
@@ -594,14 +424,12 @@ export default function ThreeViewer() {
             0.9,
           );
 
-          // 視点が遠い場合はビルを半透明に
           if (distanceToBuilding > MAX_DISTANCE) {
-            setBuildingTransparency(0.2); // 最大の透明度
+            setBuildingTransparency(0.2);
           } else {
-            setBuildingTransparency(1 - transparency); // 距離に応じた透明度
+            setBuildingTransparency(1 - transparency);
           }
         } else {
-          // 近い場合は完全不透明
           setBuildingTransparency(1.0);
         }
       }
@@ -609,31 +437,15 @@ export default function ThreeViewer() {
       controls.update();
       renderer.render(scene, camera);
     };
-    animate();
 
-    // グローバル関数としてエクスポート
-    const elevatorWindow = window as ElevatorSystemWindow;
-    elevatorWindow.moveElevator = moveElevator;
-    elevatorWindow.setElevatorAction = setElevatorAction;
-    elevatorWindow.getElevatorQueue = () => {
-      return [...floorQueue]; // 配列のコピーを返す
-    };
-    elevatorWindow.updateElevatorSystemHistory = (
-      fromFloor: number,
-      toFloor: number,
-      action: string,
-    ) => {
-      // コンソールに記録（デバッグ用）
-      console.log(
-        `エレベーターシステム履歴更新: ${fromFloor}階から${toFloor}階へ ${action}`,
-      );
+    // アニメーションを開始
+    const animationId = requestAnimationFrame(animate);
 
-      // エレベーターシステムのグローバルインスタンスがあれば履歴を更新
-      const globalSystem = elevatorWindow.__ELEVATOR_SYSTEM__;
-      if (globalSystem && typeof globalSystem.updateHistory === "function") {
-        globalSystem.updateHistory(0, fromFloor, toFloor, action);
-      }
-    };
+    // グローバル関数を外部ストア経由のものに置き換え
+    window.moveElevator = useElevatorThreeStore.getState().moveElevator;
+    window.setElevatorAction =
+      useElevatorThreeStore.getState().setElevatorAction;
+    window.getElevatorQueue = useElevatorThreeStore.getState().getElevatorQueue;
 
     // リサイズ対応
     const handleResize = () => {
@@ -647,16 +459,18 @@ export default function ThreeViewer() {
         mountRef.current.clientHeight,
       );
     };
+
     window.addEventListener("resize", handleResize);
 
-    // クリーンアップ
+    // クリーンアップ関数
     return () => {
       window.removeEventListener("resize", handleResize);
-      if (mountRef.current) {
+      cancelAnimationFrame(animationId);
+      if (mountRef.current && mountRef.current.contains(renderer.domElement)) {
         mountRef.current.removeChild(renderer.domElement);
       }
     };
-  }, []);
+  }, []); // 依存配列を空にして初期化時のみ実行
 
   return <div ref={mountRef} className="w-full h-full" />;
 }
