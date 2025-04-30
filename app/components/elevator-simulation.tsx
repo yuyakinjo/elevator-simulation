@@ -16,8 +16,6 @@ export function ElevatorSimulation() {
         <div className="my-4" />
         <FloorSelector />
         <div className="my-4" />
-        <ElevatorStatistics />
-        <div className="my-4" />
         <ElevatorHistory />
       </div>
     </div>

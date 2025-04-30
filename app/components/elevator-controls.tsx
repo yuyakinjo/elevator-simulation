@@ -62,16 +62,6 @@ export function ElevatorControls() {
           </label>
         </div>
 
-        <div className="border-t pt-4 mt-2">
-          {/* フロアラベル切り替え用の専用コンポーネントを使用 */}
-          <FloorLabelsToggle />
-        </div>
-
-        <div className="border-t pt-4 mt-2">
-          {/* エレベーター情報表示切り替え用の専用コンポーネントを使用 */}
-          <ElevatorInfoToggle />
-        </div>
-
         <button
           type="button"
           className="px-4 py-3 bg-red-500 text-white text-lg font-bold rounded-md hover:bg-red-600 disabled:bg-gray-300 transition-colors shadow-sm"
