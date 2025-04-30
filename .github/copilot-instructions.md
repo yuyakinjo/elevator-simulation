@@ -20,11 +20,20 @@ Three.jsを活用して3Dグラフィックスでエレベーターの動きを�
 ```
 elevator-simulation/
 ├── .github/               # GitHub関連ファイル
-├── app/                   # Next.jsのアプリケーションディレクトリ
-│   ├── favicon.ico        # サイトのファビコン
-│   ├── globals.css        # グローバルスタイル
-│   ├── layout.tsx         # レイアウトコンポーネント
-│   └── page.tsx           # メインページコンポーネント
+app/
+├── components/
+│   ├── elevator-controls.tsx      - Signalsを使った制御UI
+│   ├── elevator-history.tsx       - Signalsを使った履歴表示
+│   ├── elevator-simulation.tsx    - メインレイアウトコンポーネント
+│   ├── floor-selector.tsx        - Signalsを使ったフロア選択UI
+│   └── three-viewer.tsx          - useSyncExternalStoreを使ったThree.js連携
+├── contexts/
+│   └── ElevatorSystemContext.tsx  - Signalsストアへのアクセス提供
+├── models/
+│   └── elevator.ts               - エレベーターの基本モデル定義
+├── stores/
+│   ├── elevatorSignalStore.ts    - Signalsベースの状態管理
+│   └── elevatorThreeStore.ts     - Three.js用の外部ストア
 ├── public/                # 静的アセット
 │   ├── file.svg           # アイコン等のSVG画像
 │   ├── globe.svg
@@ -69,6 +78,22 @@ elevator-simulation/
 - useCallback, useMemoは使わないでください
 - setInterval, setTimeout、useEffectは使わず、イベント駆動にしてください
 
+## イベント駆動アーキテクチャの指針
+
+- **useSyncExternalStore**: Three.jsなど外部ライブラリとの状態同期には`useSyncExternalStore`を使用してください
+- **Preact Signals**: UIコンポーネント間の状態共有と更新には`@preact/signals-react`を使用してください
+- **グローバル関数の排除**: windowオブジェクトにグローバル関数を追加する代わりに、ストアベースの通信を使用してください
+- **useEffectの削減**: 副作用はイベント駆動モデルを通じて処理し、useEffectの使用を最小限にとどめてください
+- **コンポーネント間通信**: 親子関係のないコンポーネント間の通信はContextやSignalsを使用してください
+
+## 改善ポイント
+
+- **アニメーション最適化**: Three.jsのレンダリングループを最適化し、パフォーマンスを向上させる
+- **エラー処理の強化**: 各種操作のエラー状態を適切に管理・表示する機能を追加する
+- **テスト追加**: ストアとコンポーネントの単体テストを追加し、品質を確保する
+- **未使用コードの削除**: リファクタリング後に不要となったコード（特にuseEffectやsetTimeout）を削除する
+- **型安全性の向上**: 型定義をより厳密にし、コンパイル時のエラー検出を強化する
+
 ## GitHub Copilotへの指示
 
 - 日本語で返答してください
@@ -83,3 +108,5 @@ elevator-simulation/
 4. エレベーター内部と外部の状態表示
 5. 複数エレベーターのシミュレーション
 6. 統計情報の表示機能
+7. ビルディングモデルの詳細化と環境の拡張
+8. ユーザーカスタマイズ可能なシミュレーション設定
