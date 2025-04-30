@@ -14,6 +14,7 @@ interface ElevatorSystemWindow extends Window {
     toFloor: number,
     action: string,
   ) => void;
+  updateElevatorCurrentFloor?: (floor: number) => void; // 現在のフロアを更新する関数を追加
   __ELEVATOR_SYSTEM__?: {
     updateHistory: (
       elevatorId: number,
@@ -21,6 +22,7 @@ interface ElevatorSystemWindow extends Window {
       toFloor: number,
       action: string,
     ) => void;
+    updateCurrentFloor?: (elevatorId: number, floor: number) => void; // 現在のフロアを更新するメソッドを追加
   };
 }
 
@@ -454,11 +456,16 @@ export default function ThreeViewer() {
         if (previousFloor !== currentFloor) {
           // 型付きのwindowオブジェクトを使用
           const elevatorWindow = window as ElevatorSystemWindow;
+
+          // 移動履歴を更新
           elevatorWindow.updateElevatorSystemHistory?.(
             previousFloor,
             currentFloor,
             "MOVE",
           );
+
+          // エレベーターの現在階を更新
+          elevatorWindow.updateElevatorCurrentFloor?.(currentFloor);
         }
 
         // エレベーター移動中はビルを透明に

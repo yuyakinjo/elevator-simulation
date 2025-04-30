@@ -37,11 +37,35 @@ export function useElevatorSystem() {
         // 表示を更新するために状態カウンタをインクリメント
         setUpdateCount((prev) => prev + 1);
       },
+
+      // 現在階を更新する関数を追加
+      updateCurrentFloor: (elevatorId: number, floor: number) => {
+        // エレベーターの現在階を直接更新
+        if (system.elevators[elevatorId]) {
+          system.elevators[elevatorId].currentFloor = floor;
+
+          // 表示を更新するために状態カウンタをインクリメント
+          setUpdateCount((prev) => prev + 1);
+        }
+      },
+    };
+
+    // グローバル関数として階数更新関数をエクスポート
+    (window as any).updateElevatorCurrentFloor = (floor: number) => {
+      const globalSystem = (window as any).__ELEVATOR_SYSTEM__;
+      if (
+        globalSystem &&
+        typeof globalSystem.updateCurrentFloor === "function"
+      ) {
+        // デフォルトでは0番目のエレベーターを更新
+        globalSystem.updateCurrentFloor(0, floor);
+      }
     };
 
     return () => {
       // クリーンアップ時に参照を削除
       delete (window as any).__ELEVATOR_SYSTEM__;
+      delete (window as any).updateElevatorCurrentFloor;
     };
   }, [system]);
 
