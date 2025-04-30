@@ -274,6 +274,14 @@ export class ElevatorSystem {
     return request.id;
   }
 
+  // 特定のフロアに関連するリクエストを削除する
+  removeRequestsForFloor(floor: number): void {
+    // 該当階へのリクエストをすべて削除
+    this.pendingRequests = this.pendingRequests.filter(
+      (req) => req.toFloor !== floor,
+    );
+  }
+
   // 最適なエレベーターを見つける
   findOptimalElevator(request: ElevatorRequest): Elevator | null {
     let bestElevator: Elevator | null = null;

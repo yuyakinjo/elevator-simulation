@@ -49,6 +49,7 @@ interface ElevatorStore {
   getQueueInfo: () => number[]; // メソッドは残しておく（互換性のため）
   updateQueueInfo: () => void; // キュー情報を更新するメソッド
   updateElevatorHistoryCache: () => void; // エレベーター履歴を更新するメソッド
+  removeFloorFromQueue: (floor: number) => void; // 特定のフロアをキューから削除するメソッド
 }
 
 // シミュレーションループ用の変数
@@ -165,6 +166,15 @@ export const useElevatorStore = create<ElevatorStore>((set, get) => ({
 
     elevatorSystem.updateDirectHistory(elevatorId, fromFloor, toFloor, action);
 
+    // ドアを開く場合は、そのフロアをキューから削除し、システム内のリクエストも削除
+    if (action === "DOOR_OPEN") {
+      // UIキャッシュから削除
+      get().removeFloorFromQueue(toFloor);
+
+      // システム内の実際のリクエストからも削除（根本的な解決策）
+      elevatorSystem.removeRequestsForFloor(toFloor);
+    }
+
     // 履歴キャッシュを更新
     get().updateElevatorHistoryCache();
 
@@ -199,6 +209,13 @@ export const useElevatorStore = create<ElevatorStore>((set, get) => ({
     const { elevatorSystem } = get();
     const newHistory = elevatorSystem.getAllElevatorsHistory();
     set({ elevatorHistory: newHistory });
+  },
+
+  // 特定のフロアをキューから削除するメソッド
+  removeFloorFromQueue: (floor: number) => {
+    set((state) => ({
+      queueInfo: state.queueInfo.filter((f) => f !== floor),
+    }));
   },
 }));
 

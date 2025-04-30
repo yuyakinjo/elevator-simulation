@@ -98,8 +98,9 @@ export function ThreeViewer() {
         0.12,
         BUILDING_DEPTH + 0.6,
       );
+      // 最上階（30階）のバルコニーを特別な色にする
       const balconyMaterial = new THREE.MeshStandardMaterial({
-        color: 0xe0e0e0,
+        color: i === FLOOR_COUNT - 1 ? 0xd4af37 : 0xe0e0e0, // 最上階は金色、それ以外はグレー
         roughness: 0.8,
         transparent: true,
         opacity: 1.0,
@@ -116,7 +117,8 @@ export function ThreeViewer() {
         0.08,
       );
       const glassMaterial = new THREE.MeshStandardMaterial({
-        color: 0x99ccff,
+        // 最上階はより高級感のある色に
+        color: i === FLOOR_COUNT - 1 ? 0x90caf9 : 0x99ccff,
         transparent: true,
         opacity: 0.35,
         roughness: 0.1,

@@ -41,23 +41,31 @@ export function FloorSelector() {
       <h2 className="text-2xl font-bold mb-4 text-gray-800 border-b pb-2">
         フロア選択
       </h2>
-      <div className="h-96 overflow-y-auto pr-2">
-        <div className="grid grid-cols-3 gap-2">
+      <div className="h-96 overflow-y-auto pr-2 pt-3 pb-1">
+        <div className="grid grid-cols-3 gap-4">
           {floors.map((floor) => (
-            <button
-              key={floor}
-              type="button"
-              className={`p-3 rounded-full ${
-                selectedFloor === floor
-                  ? "bg-blue-600 text-white font-bold shadow-md"
-                  : queueInfo.includes(floor)
-                    ? "bg-yellow-500 text-white font-bold shadow-md"
-                    : "bg-gray-100 text-gray-800 font-medium hover:bg-gray-200 border border-gray-300"
-              } text-xl transition-all duration-200`}
-              onClick={() => handleFloorSelect(floor)}
-            >
-              {floor}
-            </button>
+            <div key={floor} className="relative">
+              {floor === 30 && (
+                <span className="absolute -top-3 -right-3 z-10 bg-amber-500 text-white text-xs px-2 py-1 rounded-full shadow-md border border-amber-600 font-bold">
+                  最上階
+                </span>
+              )}
+              <button
+                type="button"
+                className={`p-3 rounded-full w-full ${
+                  selectedFloor === floor
+                    ? "bg-blue-600 text-white font-bold shadow-md"
+                    : queueInfo.includes(floor)
+                      ? "bg-yellow-500 text-white font-bold shadow-md"
+                      : floor === 30
+                        ? "bg-gradient-to-r from-amber-300 to-yellow-400 text-gray-800 font-bold border-2 border-amber-500"
+                        : "bg-gray-100 text-gray-800 font-medium hover:bg-gray-200 border border-gray-300"
+                } text-xl transition-all duration-200`}
+                onClick={() => handleFloorSelect(floor)}
+              >
+                {floor}
+              </button>
+            </div>
           ))}
         </div>
       </div>

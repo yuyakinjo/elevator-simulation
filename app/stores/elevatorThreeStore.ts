@@ -89,6 +89,12 @@ export const useElevatorThreeStore = create<ElevatorThreeStore>((set, get) => {
       // アクションに応じた処理
       switch (action) {
         case "OPENING_DOORS": {
+          // 現在のフロアをキューから削除（同じフロアが複数ある場合も考慮）
+          const updatedQueue = get().floorQueue.filter(
+            floor => floor !== currentFloor
+          );
+          set({ floorQueue: updatedQueue });
+
           // ドアが開き切ったら状態を更新
           const timerId = setTimeout(() => {
             const currentState = get();
