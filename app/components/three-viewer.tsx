@@ -9,9 +9,18 @@ interface ElevatorSystemWindow extends Window {
   moveElevator?: (floor: number) => void;
   setElevatorAction?: (action: string) => void;
   getElevatorQueue?: () => number[];
-  updateElevatorSystemHistory?: (fromFloor: number, toFloor: number, action: string) => void;
+  updateElevatorSystemHistory?: (
+    fromFloor: number,
+    toFloor: number,
+    action: string,
+  ) => void;
   __ELEVATOR_SYSTEM__?: {
-    updateHistory: (elevatorId: number, fromFloor: number, toFloor: number, action: string) => void;
+    updateHistory: (
+      elevatorId: number,
+      fromFloor: number,
+      toFloor: number,
+      action: string,
+    ) => void;
   };
 }
 
@@ -373,8 +382,8 @@ export default function ThreeViewer() {
           doorAnimation.isAnimating = false;
           break;
         case "STOPPED":
-          // 停止状態にはエレベーターを赤色に
-          elevatorCabinMaterial.color.set(0xff0000);
+          // 停止状態にはエレベーターをライトグレーに
+          elevatorCabinMaterial.color.set(0xd3d3d3);
           // 停止したらキューをチェックして次の目的地があれば移動
           setTimeout(() => {
             if (elevatorStatus === "STOPPED" && floorQueue.length > 0) {
