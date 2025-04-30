@@ -20,6 +20,7 @@ export function ThreeViewer() {
   );
 
   // コンポーネントがマウントされたらThree.jsを初期化
+  // biome-ignore lint/correctness/useExhaustiveDependencies: // 依存配列は空にして初期化時のみ実行
   useEffect(() => {
     if (!mountRef.current) return;
 
@@ -443,11 +444,8 @@ export function ThreeViewer() {
     // アニメーションを開始
     const animationId = requestAnimationFrame(animate);
 
-    // グローバル関数を外部ストア経由のものに置き換え
-    window.moveElevator = useElevatorThreeStore.getState().moveElevator;
-    window.setElevatorAction =
-      useElevatorThreeStore.getState().setElevatorAction;
-    window.getElevatorQueue = useElevatorThreeStore.getState().getElevatorQueue;
+    // Zustandストア経由で関数を公開（グローバル関数の代わり）
+    const threeStore = useElevatorThreeStore.getState();
 
     // リサイズ対応
     const handleResize = () => {
@@ -468,7 +466,7 @@ export function ThreeViewer() {
     return () => {
       window.removeEventListener("resize", handleResize);
       cancelAnimationFrame(animationId);
-      if (mountRef.current && mountRef.current.contains(renderer.domElement)) {
+      if (mountRef.current?.contains(renderer.domElement)) {
         mountRef.current.removeChild(renderer.domElement);
       }
     };
