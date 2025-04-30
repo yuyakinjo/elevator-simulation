@@ -77,6 +77,7 @@ app/
 - for文のループ内で条件文を使う場合、array.filterを使用
 - useCallback, useMemoは使わないでください
 - setInterval, setTimeout、useEffectは使わず、イベント駆動にしてください
+- コンポーネントはexport でエクスポートしてください(export defaultは使用しない)
 
 ## イベント駆動アーキテクチャの指針
 
