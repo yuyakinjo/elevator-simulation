@@ -1,29 +1,32 @@
 "use client";
 
 import { useState } from "react";
-import { useSharedElevatorSystem } from "../contexts/ElevatorSystemContext";
-import ElevatorInfoToggle from "./elevator-info-toggle";
-import FloorLabelsToggle from "./floor-labels-toggle";
+import { useElevatorStore } from "../stores/elevatorSignalStore";
 
-export default function ElevatorControls() {
+export function ElevatorControls() {
+  // zustandストアを使用
+  const { running, startElevators, stopElevators } = useElevatorStore();
+  // 電源状態のローカルUI状態
   const [elevatorPower, setElevatorPower] = useState(true);
-  const elevatorSystem = useSharedElevatorSystem();
 
+  // 電源切り替え処理
   const handlePowerToggle = () => {
     const newPowerState = !elevatorPower;
     setElevatorPower(newPowerState);
 
     // エレベーターシステムの状態も変更
     if (newPowerState) {
-      elevatorSystem.startSimulation();
+      startElevators();
     } else {
-      elevatorSystem.stopSimulation();
+      stopElevators();
     }
   };
 
+  // 緊急停止処理
   const handleEmergencyStop = () => {
-    // 緊急停止ボタンの処理
-    elevatorSystem.stopSimulation();
+    stopElevators();
+    // 電源状態も連動
+    setElevatorPower(false);
   };
 
   return (

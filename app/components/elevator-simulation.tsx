@@ -1,10 +1,11 @@
-import ElevatorControls from "@/app/components/elevator-controls";
-import ElevatorHistory from "@/app/components/elevator-history";
-import ElevatorStatistics from "@/app/components/elevator-statistics";
-import FloorSelector from "@/app/components/floor-selector";
-import { ThreeViewer } from "@/app/components/three-viewer/three-viewer";
+"use client";
 
-export default function ElevatorSimulation() {
+import { ElevatorControls } from "@/app/components/elevator-controls";
+import { ElevatorHistory } from "@/app/components/elevator-history";
+import { FloorSelector } from "@/app/components/floor-selector";
+import { ThreeViewer } from "@/app/components/three-viewer";
+
+export function ElevatorSimulation() {
   return (
     <div className="w-full h-screen flex flex-col md:flex-row">
       <div className="flex-grow">

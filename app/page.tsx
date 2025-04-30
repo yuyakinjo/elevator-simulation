@@ -1,4 +1,4 @@
-import ElevatorSimulation from "./components/elevator-simulation";
+import { ElevatorSimulation } from "./components/elevator-simulation";
 
 export default function Home() {
   return (
