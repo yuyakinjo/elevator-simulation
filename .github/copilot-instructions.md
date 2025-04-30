@@ -67,7 +67,7 @@ elevator-simulation/
 - 定数は全て大文字のスネークケースを使用
 - for文のループ内で条件文を使う場合、array.filterを使用
 - useCallback, useMemoは使わないでください
-- setInterval, setTimeoutは使わず、イベント駆動にしてください
+- setInterval, setTimeout、useEffectは使わず、イベント駆動にしてください
 
 ## GitHub Copilotへの指示
 
